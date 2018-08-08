@@ -1,5 +1,9 @@
+#include "Arduino.h"
 #include "PongGame.h"
+#include "MainSettings.h"
 
+
+#define TARGET_SCORE 5
 
 /* ------------- Creation  -------------- */
 PongGame::PongGame(void)
@@ -17,54 +21,76 @@ void PongGame::setupGame(void)
     base_B_trigger_millis=0;
     base_B_hot=false;
     
-    base_b_score=0;
-    base_a_score=0;
-    game_state=PREPARED;
+    player_score[PLAYER_A]=0;
+    player_score[PLAYER_B]=0;
+    game_state=START;
+    current_scoring_player=NONE;
+    tick_number=0;
     
 }
 
 void PongGame::startGame(void)
 {
-     tick_number=0;
-     game_state=PLAYING;
+    enter_BALL_SERVICE();
 }
+
+
+/* --------  information about game state ------------ */
+    unsigned int PongGame::getBallPosition(){return ball_position;}
+    bool PongGame::base_A_isTriggered() {return base_A_hot;}
+    bool PongGame::base_B_isTriggered() {return base_B_hot;}
+    int  PongGame::player_A_getScore() {return  player_score[PLAYER_A];}
+    int  PongGame::player_B_getScore() {return  player_score[PLAYER_B];}
+    byte PongGame::player_getWinner()
+    {
+      if(player_score[PLAYER_A]>player_score[PLAYER_B]) return PLAYER_A;
+      else if(player_score[PLAYER_B]>player_score[PLAYER_A]) return PLAYER_B;
+      return NONE;
+    }
+    
 
  /* ---------------   Main game logic --------------- */
 unsigned long PongGame::process_tick()
 {
   unsigned long current_tick_duration=millis()-game_tick_millis;
-  base_a_score_event=false; 
-  base_b_score_event=false; 
 
   if(current_tick_duration<GAME_TICK_DELAY) return GAME_TICK_DELAY-current_tick_duration;
   tick_number++;
-  game_tick_millis=millis();
+  game_tick_millis=millis();  // globally fixed timestamp for this tick 
 
- input_foreward_tick();  // Update all input sensor information
+  input_capture_tick();  // Update all input sensor information
 
   switch(game_state) 
   {
     case BALL_SERVICE:  process_BALL_SERVICE(); break;
-    case PLAY:          process_PLAY();break;
-    case PLAYER_A_GETS_POINT(): process_PLAYER_A_GETS_POINT();break;
-    case PLAYER_B_GETS_POINT(): process_PLAYER_B_GETS_POINT();break;
-    case GAME_OVER:   process_GAME_OVER();
+    case BALL_EXCHANGE: process_BALL_EXCHANGE();break;
+    case PLAYER_SCORES: process_PLAYER_SCORES();break;
+    case GAME_OVER:     process_GAME_OVER();
   }
   return 0; 
 }
 
-
   
-      void process_BALL_SERVICE();
-    void process_PLAY();
- 
-    void process_PLAYER_A_GETS_POINT();
-    void process_PLAYER_B_GETS_POINT();
-    void process_GAME_OVER();
+void PongGame::process_BALL_SERVICE(void)
+{
+  if(current_scoring_player==PLAYER_A) 
+  {
+     ball_position=PIXEL_COUNT-1;
+     ball_velocity=-1;
+  }
+  else { 
+    ball_position=0;
+    ball_velocity=1;
+  } 
+  game_state=BALL_EXCHANGE; 
+}
 
-  
+
+
+void PongGame::process_BALL_EXCHANGE(void)
+{
   if(input_button_A_gotPressed() && game_tick_millis-base_A_trigger_millis>BASE_HOT_RECOVERY) {
-    base_A_trigger_millis=game_tick_millis
+    base_A_trigger_millis=game_tick_millis;
     base_A_hot=true;
   }
   if(base_A_hot &&  game_tick_millis-base_A_trigger_millis>BASE_HOT_DURATION) base_A_hot=false;
@@ -79,39 +105,60 @@ unsigned long PongGame::process_tick()
   if((tick_number%10)==0) // primitve method to slow down the ball TODO: Variable speed
   {
     ball_position+=ball_velocity;  // Ball movement
-    
     if(ball_position<0) {         // Ball reached Base A
-      if(base_A_hot)     {
-        ball_position-=2*ball_velocity;
-        ball_direction = -ball_velocity;
-      } else {
-       player_b_score+=1;
-       player_b_score_event=true;
-       ball_position=PIXEL_COUNT-1;
+      if(base_A_hot)   
+      {
+        ball_position-=2*ball_velocity;  // Reflect the ball
+        ball_velocity = -ball_velocity;
+      }  else {
+        enter_PLAYER_SCORES(PLAYER_B,1);
+        return;
       }
     }
-    
-    if(ball_position>=PIXEL_COUNT) 
-    {
-     if(base_B_hot)     {
-        ball_position-=2*ball_velocity;
-        ball_direction = -ball_velocity;
-      } else {
-       player_a_score+=1;
-       player_a_score_event=true;
-       ball_position=0;
-      }    
-     }
+
+    if(ball_position>=PIXEL_COUNT) {         // Ball reached Base B
+      if(base_B_hot)   
+      {
+        ball_position-=2*ball_velocity;  // Reflect the ball
+        ball_velocity = -ball_velocity;
+      }  else {
+        enter_PLAYER_SCORES(PLAYER_A,1);
+        return;
+      }
     }
-  return 0;  // initiate immediate call to calculate exact delay without
+  }
+}
+
+void PongGame::enter_PLAYER_SCORES(int player,int amount)
+{
+  // TODO - Play some cool Animation
+    player_score[player]+=amount;
+    if(player_score[player]>=TARGET_SCORE)
+    {
+      enter_GAME_OVER();
+      return;
+    }
+    game_state=PLAYER_SCORES;
+}
+     
+void PongGame::process_PLAYER_SCORES(void)
+{
+  delay(1000);
+  enter_BALL_SERVICE();
+}
+
+void PongGame::enter_GAME_OVER()
+{
+  //TODO : Play some cool victory Animation
+  game_state=GAME_OVER;
+}
+
+void PongGame::process_GAME_OVER()
+{
+  delay(2000);  // TODO: Wait for some interaction, play game_over_scene
+  enter_START();
 }
 
 
-    unsigned int PongGame::getBallPosition();
-    bool PongGame::base_A_isTriggered();
-    bool PongGame::base_B_isTriggered();
-    int  PongGame::player_A_getScore();
-    int  PongGame::player_B_getScore();
-    bool PongGame::player_A_hasScoreEvent();
-    bool PongGame::player_B_hasScoreEvent();
+
 

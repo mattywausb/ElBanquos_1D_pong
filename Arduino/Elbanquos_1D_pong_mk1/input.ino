@@ -26,7 +26,8 @@ const byte button_for_timer[] = {1,3,5,7}; // Mapping of timers to buttons on th
   
                                 
 
-const unsigned int debounce_mask[] = { /* every bit is 2 ms */
+const unsigned int debounce_mask[] = 
+{ /* every bit is 2 ms */
   0x0007,    // Button A
   0x0007,    // Button B
 };
@@ -189,13 +190,12 @@ ISR(TIMER1_COMPA_vect)
 
 
 /* ************************************* TICK ***********************************************
-   translate the state of buttons into the ticks of the master loop
+   translate the state of buttons into the ticks of the game state machint.
    Must be called by the master loop for every cycle to provide valid event states of
    all input devices.
-   Also transfers state changes, tracked with the timer interrupt into a tick state
 */
 
-void input_foreward_tick() {
+void input_capture_tick() {
 
 
   /* copy processed tick  state to history bits  and take debounced as new value */

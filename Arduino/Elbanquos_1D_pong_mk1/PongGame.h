@@ -1,17 +1,24 @@
 #ifndef PongGame_h
 #define PongGame_h
 
+
+#include "input.h"
+
 /* Game setting and memory */
 #define GAME_TICK_DELAY 10
 #define BASE_HOT_DURATION 500
 #define BASE_HOT_RECOVERY 1000
 
+#define PLAYER_A 0
+#define PLAYER_B 1
+#define NONE 255
+
+
 enum GAME_STATES {
   START, 
   BALL_SERVICE,
-  RUNNING,
-  PLAYER_A_GETS_POINT,
-  PLAYER_B_GETS_POINT,
+  BALL_EXCHANGE,
+  PLAYER_SCORES,
   GAME_OVER
 };
 
@@ -37,21 +44,25 @@ class PongGame
     bool base_B_isTriggered();
     int  player_A_getScore();
     int  player_B_getScore();
+    byte player_getWinner();
 
 
   protected:
 
+    void enter_START(){ game_state=START;};
     void process_START(){ game_state=BALL_SERVICE;};
+    void enter_BALL_SERVICE() {game_state=BALL_SERVICE;};
     void process_BALL_SERVICE();
-    void process_PLAY();
+    void process_BALL_EXCHANGE();
  
-    void process_PLAYER_A_GETS_POINT();
-    void process_PLAYER_B_GETS_POINT();
+    void enter_PLAYER_SCORES(int player,int amount);
+    void process_PLAYER_SCORES();
+    void enter_GAME_OVER() ;
     void process_GAME_OVER();
 
 
     /* General game state */
-    GAME_STATES game_state=PREPARED;
+    GAME_STATES game_state=START;
     unsigned long game_tick_millis=0;
     byte tick_number=0;
     
@@ -67,11 +78,10 @@ class PongGame
     bool base_B_hot=false;
 
     /* Player score */
-    byte player_a_score=0;
-    byte player_b_score=0;
-    byte previous_scoring_player=0;
+    byte player_score[2]={0,0};
+    byte current_scoring_player=NONE;
 
-} // class PongGame
+}; // class PongGame
 
   
 
