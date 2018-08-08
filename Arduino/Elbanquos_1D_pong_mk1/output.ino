@@ -5,7 +5,7 @@
 #include "PongGame.h"
 
 #ifdef TRACE_ON
-#define TRACE_OUTPUT
+//#define TRACE_OUTPUT
 #endif
 
 /*device */
@@ -18,6 +18,11 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 // #define COLOR(r,g,b,i) strip.Color(r*i/255, g*i/255, b*i/255)
 #define FPS 50
 #define FRAME_DELAY 1000/FPS
+
+// general elements
+#define SELECT_SCENE_MAIN_COLOR strip.Color(0,120,0)
+
+// in game elements
 #define BALL_COLOR strip.Color(200, 200, 0) 
 #define BALL_COLOR_AFTER_GLOW(i) dimmedColor(20, 10, 0,i)  
 #define BACKGROUND_COLOR strip.Color(0, 0, 0)
@@ -32,13 +37,14 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 /* Output scene and sequence management */
 
 // TODO add another setting for sequences, so sequences can overrule program and fall back to it afterwards
-enum OUTPUT_PROGRAM
+enum output_program_t
 {
   GAME_SCENE,
-  GAME_OVER_SCENE
+  GAME_OVER_SCENE,
+  GAME_SELECT_SCENE
 } ;
 
-OUTPUT_PROGRAM output_program=GAME_SCENE;
+output_program_t output_program=GAME_SCENE;
 
 unsigned long output_frame_tick_millis=0;
 bool output_sequence_complete=true;
@@ -71,6 +77,7 @@ unsigned long output_frame_tick()
   {
     case GAME_SCENE: output_process_GAME_SCENE(); break;
     case GAME_OVER_SCENE: output_process_GAME_OVER_SCENE(); break;
+    case GAME_SELECT_SCENE: output_process_GAME_SELECT_SCENE(); break;
   }
   return 0;
 }
@@ -79,14 +86,25 @@ unsigned long output_frame_tick()
  *  *********************************************************************
  */
 
+void output_begin_GAME_SELECT_SCENE() 
+{
+  simpleSceneChange();
+  output_program=GAME_SELECT_SCENE;
+}
+
+void output_process_GAME_SELECT_SCENE()
+{
+  for(int i=0;i<PIXEL_COUNT;i++) strip.setPixelColor(i,  SELECT_SCENE_MAIN_COLOR);
+  strip.show();
+}
+
+ 
+
 /* ************ GAME_SCENE *************************** */
 
 void output_begin_GAME_SCENE ()
 {
-  for(int i=0;i<PIXEL_COUNT;i++) strip.setPixelColor(i, 0);
-  strip.show();
-  output_frame_number=0;
-  output_scene_start_millis=millis();
+  simpleSceneChange();
   output_program=GAME_SCENE;
 }
 
@@ -106,9 +124,6 @@ void output_process_GAME_SCENE()
       /* Ball Layer */
       if(i==displayGame->getBallPosition()) {
         strip.setPixelColor(i, BALL_COLOR);
-        #ifdef TRACE_ON
-          Serial.println(i);
-        #endif
         continue;
       }
 
@@ -155,12 +170,8 @@ void output_process_GAME_SCENE()
 
 void output_begin_GAME_OVER_SCENE()
 {
-  for(int i=0;i<PIXEL_COUNT;i++) strip.setPixelColor(i, 0);
-  strip.show();
-  output_frame_number=0;
-  output_scene_start_millis=millis();
+  simpleSceneChange();
   output_program=GAME_OVER_SCENE;
-  
 }
 
 void output_process_GAME_OVER_SCENE()
@@ -179,6 +190,7 @@ void output_process_GAME_OVER_SCENE()
   for(int i=0;i<PIXEL_COUNT;i++) {
     strip.setPixelColor(i,BALL_COLOR_AFTER_GLOW(255));
   }
+  strip.show();
 }
 
 
@@ -191,6 +203,13 @@ uint32_t dimmedColor(int r,int g,int b,int i)
   return strip.Color(r*i/255, g*i/255, b*i/255);
 }
 
+void simpleSceneChange()
+{
+  for(int i=0;i<PIXEL_COUNT;i++) strip.setPixelColor(i, 0);
+  strip.show();
+  output_frame_number=0;
+  output_scene_start_millis=millis();
+}
 
 /*  ************************  setup  ************************************
  *  *********************************************************************

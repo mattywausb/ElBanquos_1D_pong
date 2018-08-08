@@ -5,12 +5,10 @@
 // Activate general trace output
 
 #ifdef TRACE_ON
+#define TRACE_PUSH_WITH_BUILTIN
 #define TRACE_INPUT 
-//#define TRACE_INPUT_HIGH 
+#define TRACE_INPUT_HIGH 
 #endif
-
-
-
 
 /* Port constants --> check the IDS Function */
 
@@ -54,14 +52,14 @@ volatile int traceValue_turn_interval=0;
 /*                                         76543210 */
 
 
-#define INPUT_BUTTON_A_BITS              0x0003
-#define INPUT_BUTTON_A_IS_PRESSED_PATTERN   0x0003
+#define INPUT_BUTTON_A_BITS                  0x0003
+#define INPUT_BUTTON_A_IS_PRESSED_PATTERN    0x0003
 #define INPUT_BUTTON_A_GOT_PRESSED_PATTERN   0x0001
 #define INPUT_BUTTON_A_GOT_RELEASED_PATTERN  0x0002
-#define INPUT_BUTTON_B_BITS              0x0030
-#define INPUT_BUTTON_B_IS_PRESSED_PATTERN   0x0003
-#define INPUT_BUTTON_B_GOT_PRESSED_PATTERN   0x0001
-#define INPUT_BUTTON_B_GOT_RELEASED_PATTERN  0x0002
+#define INPUT_BUTTON_B_BITS                  0x000C
+#define INPUT_BUTTON_B_IS_PRESSED_PATTERN    0x000C
+#define INPUT_BUTTON_B_GOT_PRESSED_PATTERN   0x0004
+#define INPUT_BUTTON_B_GOT_RELEASED_PATTERN  0x0008
 
 
 /* Masks for debounce handling */
@@ -107,7 +105,7 @@ long input_getLastPressDuration()
 
 bool input_button_A_gotPressed()
 {
-
+ 
   return input_enabled && ((tick_state & INPUT_BUTTON_A_BITS) == INPUT_BUTTON_A_GOT_PRESSED_PATTERN);
 }
 
@@ -204,13 +202,36 @@ void input_capture_tick() {
 
   /* Track pressing time */
   /* 01 = Press  */
-  if((debounced_state & INPUT_CURRENT_BITS) ^( (debounced_state & INPUT_PREVIOUS_BITS) >> 1)&(debounced_state & INPUT_CURRENT_BITS)) last_press_end_time =last_press_start_time=input_last_change_time;
+  if((  (tick_state & INPUT_CURRENT_BITS) ^( (tick_state & INPUT_PREVIOUS_BITS) >> 1)  // Anything changed
+     )&(tick_state & INPUT_CURRENT_BITS))     // and it was changed to 1
+  {
+    last_press_end_time =last_press_start_time=input_last_change_time;
+    #ifdef TRACE_INPUT_HIGH
+      Serial.print(F("Input Press Event"));Serial.println(tick_state,HEX);
+    #endif
+  }
   /* 10 = release */ 
-  if(((debounced_state & INPUT_CURRENT_BITS)) ^( (debounced_state & INPUT_PREVIOUS_BITS) >> 1)&(~debounced_state & INPUT_CURRENT_BITS)) last_press_end_time=input_last_change_time;
+  if((  (tick_state & INPUT_CURRENT_BITS)^( (tick_state & INPUT_PREVIOUS_BITS) >> 1)
+     )  &(~tick_state & INPUT_CURRENT_BITS)) 
+  {
+    last_press_end_time=input_last_change_time;
+    #ifdef TRACE_INPUT_HIGH
+      Serial.print(F("Input Release Event"));Serial.println(tick_state,HEX);
+    #endif
+   }
 
 
   /* enable input when all is release */
-  if(debounced_state==0) input_enabled=true;
+  if(tick_state==0) 
+  {
+    #ifdef TRACE_PUSH_WITH_BUILTIN
+      digitalWrite(LED_BUILTIN,LOW);
+    #endif
+    input_enabled=true;
+  }
+  #ifdef TRACE_PUSH_WITH_BUILTIN
+  else    digitalWrite(LED_BUILTIN,HIGH);
+  #endif
   
 } // void input_switches_tick()
 
@@ -241,6 +262,11 @@ void input_setup() {
   TCCR1B |= (1 << CS12);    // 256 als Prescale-Wert spezifizieren
   TIMSK1 |= (1 << OCIE1A);  // Timer Compare Interrupt aktivieren
   interrupts();             // alle Interrupts scharf schalten
+
+  #ifdef TRACE_PUSH_WITH_BUILTIN
+    pinMode(LED_BUILTIN,OUTPUT);
+    digitalWrite(LED_BUILTIN,LOW);
+  #endif
 
   setupComplete = true;
 }

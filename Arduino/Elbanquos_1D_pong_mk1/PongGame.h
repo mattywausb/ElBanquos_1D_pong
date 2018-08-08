@@ -2,7 +2,7 @@
 #define PongGame_h
 
 
-#include "input.h"
+
 
 /* Game setting and memory */
 #define GAME_TICK_DELAY 10
@@ -15,11 +15,13 @@
 
 
 enum GAME_STATES {
+  OFF,
   START, 
   BALL_SERVICE,
   BALL_EXCHANGE,
   PLAYER_SCORES,
-  GAME_OVER
+  GAME_OVER,
+  CLOSING
 };
 
 class PongGame
@@ -35,23 +37,28 @@ class PongGame
     */
     void setupGame();
     void startGame();
+   
     
     unsigned long process_tick();
 
     /* ---- State information ----*/
+    bool isActive();
+    bool isClosing();
+    
     unsigned int getBallPosition();
     bool base_A_isTriggered();
     bool base_B_isTriggered();
     int  player_A_getScore();
     int  player_B_getScore();
     byte player_getWinner();
+    
 
 
   protected:
 
-    void enter_START(){ game_state=START;};
-    void process_START(){ game_state=BALL_SERVICE;};
-    void enter_BALL_SERVICE() {game_state=BALL_SERVICE;};
+    void enter_START();
+    void process_START();
+    void enter_BALL_SERVICE();
     void process_BALL_SERVICE();
     void process_BALL_EXCHANGE();
  
@@ -62,9 +69,9 @@ class PongGame
 
 
     /* General game state */
-    GAME_STATES game_state=START;
+    GAME_STATES game_state=OFF;
     unsigned long game_tick_millis=0;
-    byte tick_number=0;
+    unsigned long game_tick_number=0;
     
 
     /* Ball state */
