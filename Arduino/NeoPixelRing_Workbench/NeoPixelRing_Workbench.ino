@@ -1,10 +1,11 @@
 
 
 #define TRACE_ON
-#define TRACE_OUTPUT
+//#define TRACE_OUTPUT
 //#define TRACE_OUTPUT_HIGH
 
 #include <Adafruit_NeoPixel.h>
+#include "particle.h"
 
 #define PIXEL_PIN    7    // Digital IO pin connected to the NeoPixels.
 
@@ -18,7 +19,7 @@
 //   NEO_KHZ400  400 KHz bitstream (e.g. FLORA pixels)
 //   NEO_KHZ800  800 KHz bitstream (e.g. High Density LED strip), correct for neopixel stick
 
-#define FPS 15
+#define FPS 25
 #define FRAME_DELAY 1000/FPS
 #define BALL_COLOR strip.Color(200, 200, 0)  // Yellow
 #define BALL_COLOR_AFTER_GLOW strip.Color(20, 10, 0)  // Yellow
@@ -33,10 +34,12 @@ unsigned long output_frame_number=0;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 enum program_t {
-  dimgrading_scene
+  dimgrading_scene,
+  particle_party_1
 };
 
-program_t current_program=dimgrading_scene;
+program_t current_program=particle_party_1;
+//program_t current_program=dimgrading_scene;
 
 /*  ************************  dimgrading_scene **************************
  *  *********************************************************************
@@ -97,6 +100,50 @@ unsigned long output_draw_dimgrading_scene()
   strip.show();
 }
 
+/*  ************************  output_draw_particle_party_1 **************************
+ *  *********************************************************************
+ */
+void output_draw_particle_party_1()
+{
+    
+  #define PARTICLE_COUNT 10
+  static Particle particles[PARTICLE_COUNT];
+  static byte particle_birth_entry=0;
+  int i;
+   
+  unsigned long current_frame_duration=millis()-output_frame_millis;
+  if(current_frame_duration<FRAME_DELAY) return FRAME_DELAY-current_frame_duration;
+  output_frame_millis=millis();
+  output_frame_number++;
+  #ifdef TRACE_OUTPUT
+      Serial.print(F("Frame:"));Serial.println(output_frame_number);
+  #endif 
+
+  if(output_frame_number%30==0) {
+    #ifdef TRACE_OUTPUT 
+      Serial.println(F("Ignite particle:"));
+    #endif
+      for(i=0;i<random(3,6);i++)
+      {
+      if(!particles[particle_birth_entry].isAlive()) {
+        particles[particle_birth_entry].awake(200-random(70),150-random(70),100-random(70),6,random(7,10)*(i%2==0?1:-1),random(3,40));
+      }
+      if(++particle_birth_entry>=PARTICLE_COUNT) particle_birth_entry=0;
+      }
+  }
+  
+
+  for(i=0;i<PIXEL_COUNT;i++) {// clear strip
+    strip.setPixelColor(i,0);
+  }
+  for(i=0;i<PARTICLE_COUNT;i++) {
+    if(particles[i].isAlive()) {
+      particles[i].draw(strip);
+      particles[i].tick();
+    }
+  }
+  strip.show();
+}
 /*  ************************  Helper  ************************************
  *  *********************************************************************
  */
@@ -132,11 +179,23 @@ void setup() {
  */
 void loop() {
    input_capture_tick();
+
    switch (current_program) {
     case dimgrading_scene: 
               // TODO Check buttons to switch to next scene
               output_draw_dimgrading_scene();
-              break;    
+             if(input_button_B_gotReleased() && input_getLastPressDuration()>3000)
+                 current_program=particle_party_1;
+              break;  
+    case particle_party_1:
+
+              output_draw_particle_party_1();
+              if(input_button_B_gotReleased() && input_getLastPressDuration()>3000)
+                 current_program=dimgrading_scene;
+              
+              break;  
+    default: 
+         Serial.println(F("Bad program")); delay(1000);
    }
 }
 
