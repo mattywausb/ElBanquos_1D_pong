@@ -1,14 +1,16 @@
 /* Functions to handle all input elements */
 
-#include "MainSettings.h"
 
 // Activate general trace output
 
-#ifdef TRACE_ON
+
+#define TRACE_ON
+
+//#ifdef TRACE_ON
 #define TRACE_PUSH_WITH_BUILTIN
 #define TRACE_INPUT 
 #define TRACE_INPUT_HIGH 
-#endif
+//#endif
 
 /* Port constants --> check the IDS Function */
 
@@ -236,7 +238,14 @@ void input_capture_tick() {
 */
 
 void input_setup() {
-
+  
+  #ifdef TRACE_PUSH_WITH_BUILTIN
+    pinMode(LED_BUILTIN,OUTPUT);
+    digitalWrite(LED_BUILTIN,LOW);
+  #endif
+  #ifdef TRACE_INPUT 
+       Serial.println(F("input_setup!"));
+  #endif 
 
   /* Initialize switch pins and raw_state_register array */
   for (byte switchIndex = 0; switchIndex < INPUT_PORT_COUNT ; switchIndex++) {
@@ -246,7 +255,7 @@ void input_setup() {
 
   // Establish timer1 interrupt for regular input scanning
 
-  noInterrupts();           // Alle Interrupts temporär abschalten
+  noInterrupts();           // Alle Interrupts temporÃ¤r abschalten
   TCCR1A = 0;
   TCCR1B = 0;
   TCNT1 = 0;                // Register mit 0 initialisieren
@@ -257,10 +266,7 @@ void input_setup() {
   TIMSK1 |= (1 << OCIE1A);  // Timer Compare Interrupt aktivieren
   interrupts();             // alle Interrupts scharf schalten
 
-  #ifdef TRACE_PUSH_WITH_BUILTIN
-    pinMode(LED_BUILTIN,OUTPUT);
-    digitalWrite(LED_BUILTIN,LOW);
-  #endif
 
   setupComplete = true;
 }
+

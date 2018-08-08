@@ -79,9 +79,9 @@ class PongGame
     int ball_velocity=1;
 
     /* Base state */
-    unsigned base_A_trigger_millis=0;
+    unsigned long base_A_trigger_millis=0;
     bool base_A_hot=false;
-    unsigned base_B_trigger_millis=0;
+    unsigned long base_B_trigger_millis=0;
     bool base_B_hot=false;
 
     /* Player score */

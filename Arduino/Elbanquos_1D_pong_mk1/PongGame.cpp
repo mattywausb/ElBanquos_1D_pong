@@ -116,6 +116,8 @@ void PongGame::enter_BALL_SERVICE()
 {
   game_state=BALL_SERVICE;
   output_begin_GAME_SCENE ();
+  base_A_trigger_millis=0; 
+  base_B_trigger_millis=0;
   #ifdef TRACE_PONG_STATE
     Serial.println(F(">BALL_SERVICE"));
   #endif
@@ -187,6 +189,7 @@ void PongGame::enter_PLAYER_SCORES(int player,int amount)
   
   // TODO - Play some cool Animation
     player_score[player]+=amount;
+    current_scoring_player=player;
     if(player_score[player]>=TARGET_SCORE)
     {
       enter_GAME_OVER();
@@ -213,7 +216,7 @@ void PongGame::enter_GAME_OVER()
 
 void PongGame::process_GAME_OVER()
 {
-  if(output_sceneDurationMillis()>10000) {
+  if(output_sceneDurationMillis()>5000) {
     game_state=CLOSING;
   }
 }

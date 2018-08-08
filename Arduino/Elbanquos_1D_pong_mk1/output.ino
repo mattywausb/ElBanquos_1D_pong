@@ -23,12 +23,12 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 #define SELECT_SCENE_MAIN_COLOR strip.Color(0,120,0)
 
 // in game elements
-#define BALL_COLOR strip.Color(200, 200, 0) 
+#define BALL_COLOR strip.Color(255, 255, 0) 
 #define BALL_COLOR_AFTER_GLOW(i) dimmedColor(20, 10, 0,i)  
 #define BACKGROUND_COLOR strip.Color(0, 0, 0)
-#define BASE_A_COLOR(i) dimmedColor(0, 40, 40,i)
-#define BASE_B_COLOR(i) dimmedColor(50, 00,0,i)
-#define BASE_HOT_COLOR strip.Color(180,90,0)
+#define BASE_A_COLOR(i) dimmedColor(0, 128, 128,i)
+#define BASE_B_COLOR(i) dimmedColor(150, 00,0,i)
+#define BASE_HOT_COLOR strip.Color(230,140,0)
 #define POINT_COLOR strip.Color(15,0,30)
 
 #define BASE_A_POSITION 0
@@ -37,14 +37,14 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 /* Output scene and sequence management */
 
 // TODO add another setting for sequences, so sequences can overrule program and fall back to it afterwards
-enum output_program_t
+enum output_scene_t
 {
   GAME_SCENE,
   GAME_OVER_SCENE,
   GAME_SELECT_SCENE
 } ;
 
-output_program_t output_program=GAME_SCENE;
+output_scene_t output_current_scene=GAME_SCENE;
 
 unsigned long output_frame_tick_millis=0;
 bool output_sequence_complete=true;
@@ -73,7 +73,7 @@ unsigned long output_frame_tick()
   output_frame_number++;   // Will be reset by every scene or sequence change
   output_frame_tick_millis=millis();  // globally fixed timestamp for this tick
 
-  switch(output_program)
+  switch(output_current_scene)
   {
     case GAME_SCENE: output_process_GAME_SCENE(); break;
     case GAME_OVER_SCENE: output_process_GAME_OVER_SCENE(); break;
@@ -89,7 +89,7 @@ unsigned long output_frame_tick()
 void output_begin_GAME_SELECT_SCENE() 
 {
   simpleSceneChange();
-  output_program=GAME_SELECT_SCENE;
+  output_current_scene=GAME_SELECT_SCENE;
 }
 
 void output_process_GAME_SELECT_SCENE()
@@ -105,7 +105,7 @@ void output_process_GAME_SELECT_SCENE()
 void output_begin_GAME_SCENE ()
 {
   simpleSceneChange();
-  output_program=GAME_SCENE;
+  output_current_scene=GAME_SCENE;
 }
 
 void output_process_GAME_SCENE()
@@ -154,7 +154,7 @@ void output_process_GAME_SCENE()
         strip.setPixelColor(i, POINT_COLOR);
         continue;
        }  
-       if(i>=(PIXEL_COUNT-2-displayGame->player_B_getScore())){
+       if(i>=(PIXEL_COUNT-1-displayGame->player_B_getScore())){
         strip.setPixelColor(i, POINT_COLOR);
         continue;
        }
@@ -171,7 +171,7 @@ void output_process_GAME_SCENE()
 void output_begin_GAME_OVER_SCENE()
 {
   simpleSceneChange();
-  output_program=GAME_OVER_SCENE;
+  output_current_scene=GAME_OVER_SCENE;
 }
 
 void output_process_GAME_OVER_SCENE()
@@ -179,16 +179,16 @@ void output_process_GAME_OVER_SCENE()
   uint32_t color;
 
   if(displayGame->player_getWinner()==PLAYER_A) {
-      color=BASE_A_COLOR((FPS-(output_frame_number%FPS)*255/FPS));
+      color=BASE_A_COLOR(((FPS-(output_frame_number%FPS))*255/FPS));
   }
   if(displayGame->player_getWinner()==PLAYER_B) {
-      color=BASE_B_COLOR((FPS-(output_frame_number%FPS)*255/FPS));
+      color=BASE_B_COLOR(((FPS-(output_frame_number%FPS))*255/FPS));
   }
   if(displayGame->player_getWinner()==NONE) {
-      color=POINT_COLOR;
+      color=BALL_COLOR_AFTER_GLOW(255);
   }
   for(int i=0;i<PIXEL_COUNT;i++) {
-    strip.setPixelColor(i,BALL_COLOR_AFTER_GLOW(255));
+    strip.setPixelColor(i,color);
   }
   strip.show();
 }
@@ -200,6 +200,8 @@ void output_process_GAME_OVER_SCENE()
 
 uint32_t dimmedColor(int r,int g,int b,int i)
 {
+  if(i<0)i=0;
+  if(i>255)i=255;
   return strip.Color(r*i/255, g*i/255, b*i/255);
 }
 
