@@ -110,14 +110,22 @@ void output_draw_particle_party_1()
   static Particle particles[PARTICLE_COUNT];
   int i;
 
-  if(input_button_B_gotPressed()) {
-    #ifdef TRACE_OUTPUT 
-      Serial.println(F("Ignite particle:"));
-    #endif
+  if(input_button_A_gotPressed()) {
+
       for(i=0;i<PARTICLE_COUNT;i++)
       {
         if(!particles[i].isAlive()) {
-          particles[i].igniteRandom(6);
+          particles[i].igniteRandom(11,-600);
+          break;
+        }
+     }
+  }
+  if(input_button_B_gotPressed()) {
+
+      for(i=0;i<PARTICLE_COUNT;i++)
+      {
+        if(!particles[i].isAlive()) {
+          particles[i].igniteRandom(0,600);
           break;
         }
      }

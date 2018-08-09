@@ -6,7 +6,7 @@
 #define PARTICLE_NORM_DISTANCE 15876     // Full distance the norm pixel will fly
 
 #define PARTICLE_NORM_DURATION 64
-#define PARTICLE_FRAMES_PER_TICK 2        // at 30 fps the norm partice will live 4 Seconds
+#define PARTICLE_FRAMES_PER_TICK 1        // at 30 fps the norm partice will live 4 Seconds
 
 #define PARTICLE_PIXEL_COUNT 12
 #define POSITION_TO_PIXEL_FACTOR 1323    // Full distance divided to 12 pixel strand

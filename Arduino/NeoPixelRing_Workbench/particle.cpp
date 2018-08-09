@@ -35,8 +35,8 @@ void Particle::ignite(int r,int g, int b, int pos, int vlct, byte dcr)
 void Particle::igniteRandom(int pos, int velocityBase)
 {
   colorChannel[0]=230-random(60);  // r
-  colorChannel[1]=255-random(100);  // g
-  colorChannel[2]=255-random(100);  // b
+  colorChannel[1]=255-random(200);  // g
+  colorChannel[2]=255-random(200);  // b
   
   position=pos*POSITION_TO_PIXEL_FACTOR;
   if(velocityBase>0) velocity=velocityBase+ random(0,300);
