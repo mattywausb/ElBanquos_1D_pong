@@ -14,8 +14,8 @@
 
 #define PORT_MAIN_SWITCH 8
 
-const byte switch_pin_list[] = {6,    // Button A
-                                8,    // Button B
+const byte switch_pin_list[] = {8,    // Button A
+                                6,    // Button B
                                };                               
 
 const unsigned int debounce_mask[] = 

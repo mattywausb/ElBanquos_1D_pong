@@ -279,7 +279,7 @@ void output_process_PLAYER_SCORE_SEQUENCE()
 {
   bool particleAlive=false;
   strip.clear();
-  draw_bases_and_score();
+  if(output_frame_number>=4) draw_bases_and_score();
   
   for(int i=0;i<PARTICLE_COUNT;i++) 
   {

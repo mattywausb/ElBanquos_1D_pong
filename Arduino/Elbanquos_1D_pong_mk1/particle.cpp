@@ -89,7 +89,7 @@ void Particle::draw(Adafruit_NeoPixel &strip)
       Serial.print(currentChannel[i]);Serial.print("|");
     #endif
    }
-   strip.setPixelColor(position/POSITION_TO_PIXEL_FACTOR,currentChannel[0],currentChannel[1],currentChannel[2]);
+   if(currentChannel[0]|currentChannel[1]|currentChannel[2]) strip.setPixelColor(position/POSITION_TO_PIXEL_FACTOR,currentChannel[0],currentChannel[1],currentChannel[2]);
    #ifdef TRACE_PARTICLE
    Serial.println(life);
    #endif
