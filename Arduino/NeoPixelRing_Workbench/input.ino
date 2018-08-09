@@ -7,9 +7,10 @@
 #define TRACE_ON
 
 //#ifdef TRACE_ON
-#define TRACE_PUSH_WITH_BUILTIN
-#define TRACE_INPUT 
-#define TRACE_INPUT_HIGH 
+//#define TRACE_PUSH_WITH_BUILTIN
+//#define TRACE_INPUT 
+//#define TRACE_INPUT_HIGH 
+//#define TRACE_INPUT_RETRIEVAL
 //#endif
 
 /* Port constants --> check the IDS Function */
@@ -118,7 +119,9 @@ byte input_button_A_gotReleased()
 
 bool input_button_B_gotPressed()
 {
-
+    #ifdef TRACE_INPUT_RETRIEVAL
+      Serial.print(F("call input_button_B_gotPressed"));Serial.println(tick_state,HEX);
+    #endif
   return input_enabled && ((tick_state & INPUT_BUTTON_B_BITS) == INPUT_BUTTON_B_GOT_PRESSED_PATTERN);
 }
 

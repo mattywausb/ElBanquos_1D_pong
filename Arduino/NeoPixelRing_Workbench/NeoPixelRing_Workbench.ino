@@ -119,11 +119,12 @@ void output_draw_particle_party_1()
       Serial.print(F("Frame:"));Serial.println(output_frame_number);
   #endif 
 
-  if(output_frame_number%30==0) {
+   if(input_button_B_isPressed()) {
+ // if(output_frame_number%30==0) {
     #ifdef TRACE_OUTPUT 
       Serial.println(F("Ignite particle:"));
     #endif
-      for(i=0;i<random(3,6);i++)
+      for(i=0;i<random(2,5);i++)
       {
       if(!particles[particle_birth_entry].isAlive()) {
         particles[particle_birth_entry].awake(200-random(70),150-random(70),100-random(70),6,random(7,10)*(i%2==0?1:-1),random(3,40));

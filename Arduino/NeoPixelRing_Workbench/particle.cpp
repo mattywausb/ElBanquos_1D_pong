@@ -28,9 +28,10 @@ void Particle::awake(int r,int g, int b, int pos, int vlct, byte dcr)
      
 void Particle::tick(void)
 {
-  position+=velocity*256/(512-life);
+  position+=velocity;
    if(position<0) position+=PIXEL_COUNT*10;
    if(position>=PIXEL_COUNT*10)position-=PIXEL_COUNT*10;
+  velocity=velocity*90/100; 
   if(life>decayrate) life-=decayrate;
   else life=0;        
 }
