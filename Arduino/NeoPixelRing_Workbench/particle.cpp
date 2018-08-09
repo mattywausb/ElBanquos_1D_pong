@@ -3,7 +3,7 @@
 
 //#define TRACE_PARTICLE
 
-#define PIXEL_COUNT 12
+#define PARTICLE_PIXEL_COUNT 12
 
 
 Particle::Particle(void)
@@ -11,45 +11,78 @@ Particle::Particle(void)
 
 }
 
-void Particle::awake(int r,int g, int b, int pos, int vlct, byte dcr)   
+void Particle::ignite(int r,int g, int b, int pos, int vlct, byte dcr)   
 {
   colorChannel[0]=r;
   colorChannel[1]=g;
   colorChannel[2]=b;
-  movetick=0;
-  position=pos*10;
+  
+  position=pos*POSITION_TO_PIXEL_FACTOR;
   velocity=vlct;
-  decayrate=dcr;
-  life=255;
+  decayrate=dcr;   
+  if(decayrate>99) decayrate=99; // using values >99 would result in infinity life
+  
+  life=1000;
+   if(velocity>0) acceleration=-15;
+  else acceleration=15;
+  
   #ifdef TRACE_PARTICLE
-  Serial.println("awaken");
+  Serial.println("ignite");
   #endif
 }
-     
-void Particle::tick(void)
+
+
+void Particle::igniteRandom(int pos, int velocityBase)
 {
+  colorChannel[0]=230-random(60);  // r
+  colorChannel[1]=255-random(100);  // g
+  colorChannel[2]=255-random(100);  // b
+  
+  position=pos*POSITION_TO_PIXEL_FACTOR;
+  if(velocityBase>0) velocity=velocityBase+ random(0,300);
+  if(velocityBase<0) velocity=velocityBase- random(0,300);
+  if(velocityBase==0) velocity=((random(20)%2)==0?1:-1)*random(700,1000);
+  decayrate=random(70,93);  // decayrate
+  
+  life=1000-random(0,100);
+  if(velocity>0) acceleration=-15-(3-random(0,6));
+  else acceleration=15+(3-random(0,6));
+}
+     
+void Particle::frameTick(unsigned long frame_number)
+{
+  long long_life=0;
+
+  if(frame_number%PARTICLE_FRAMES_PER_TICK!=0) return;  
+  
   position+=velocity;
-   if(position<0) position+=PIXEL_COUNT*10;
-   if(position>=PIXEL_COUNT*10)position-=PIXEL_COUNT*10;
-  velocity=velocity*90/100; 
-  if(life>decayrate) life-=decayrate;
-  else life=0;        
+  if(position<0) position+=max_position;
+  if(position>=max_position)  position-=max_position;
+   
+  velocity+=acceleration;
+
+  if(life>0) {
+    long_life=life;
+    life=(long_life*decayrate)/100;   // Percentace in integer arithmetic: multiply first
+  }       
 }
         
 void Particle::draw(Adafruit_NeoPixel &strip)
 {
    int currentChannel[3];
+   unsigned int colorValueAsInt;
+   long long_life=life;
 
    for(int i=0;i<3;i++)
    {
-    currentChannel[i]=((int)colorChannel[i])*(int)life/255;
-  #ifdef TRACE_PARTICLE    
+    currentChannel[i]=long_life*colorChannel[i]/1000;
+    #ifdef TRACE_PARTICLE    
       Serial.print(currentChannel[i]);Serial.print("|");
-      #endif
+    #endif
    }
-   strip.setPixelColor(position/10,currentChannel[0],currentChannel[1],currentChannel[2]);
-     #ifdef TRACE_PARTICLE
-   Serial.println();
+   strip.setPixelColor(position/POSITION_TO_PIXEL_FACTOR,currentChannel[0],currentChannel[1],currentChannel[2]);
+   #ifdef TRACE_PARTICLE
+   Serial.println(life);
    #endif
 }
 

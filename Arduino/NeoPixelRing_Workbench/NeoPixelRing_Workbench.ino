@@ -19,7 +19,7 @@
 //   NEO_KHZ400  400 KHz bitstream (e.g. FLORA pixels)
 //   NEO_KHZ800  800 KHz bitstream (e.g. High Density LED strip), correct for neopixel stick
 
-#define FPS 25
+#define FPS 30
 #define FRAME_DELAY 1000/FPS
 #define BALL_COLOR strip.Color(200, 200, 0)  // Yellow
 #define BALL_COLOR_AFTER_GLOW strip.Color(20, 10, 0)  // Yellow
@@ -108,8 +108,20 @@ void output_draw_particle_party_1()
     
   #define PARTICLE_COUNT 10
   static Particle particles[PARTICLE_COUNT];
-  static byte particle_birth_entry=0;
   int i;
+
+  if(input_button_B_gotPressed()) {
+    #ifdef TRACE_OUTPUT 
+      Serial.println(F("Ignite particle:"));
+    #endif
+      for(i=0;i<PARTICLE_COUNT;i++)
+      {
+        if(!particles[i].isAlive()) {
+          particles[i].igniteRandom(6);
+          break;
+        }
+     }
+  }
    
   unsigned long current_frame_duration=millis()-output_frame_millis;
   if(current_frame_duration<FRAME_DELAY) return FRAME_DELAY-current_frame_duration;
@@ -119,19 +131,7 @@ void output_draw_particle_party_1()
       Serial.print(F("Frame:"));Serial.println(output_frame_number);
   #endif 
 
-   if(input_button_B_isPressed()) {
- // if(output_frame_number%30==0) {
-    #ifdef TRACE_OUTPUT 
-      Serial.println(F("Ignite particle:"));
-    #endif
-      for(i=0;i<random(2,5);i++)
-      {
-      if(!particles[particle_birth_entry].isAlive()) {
-        particles[particle_birth_entry].awake(200-random(70),150-random(70),100-random(70),6,random(7,10)*(i%2==0?1:-1),random(3,40));
-      }
-      if(++particle_birth_entry>=PARTICLE_COUNT) particle_birth_entry=0;
-      }
-  }
+ 
   
 
   for(i=0;i<PIXEL_COUNT;i++) {// clear strip
@@ -140,7 +140,7 @@ void output_draw_particle_party_1()
   for(i=0;i<PARTICLE_COUNT;i++) {
     if(particles[i].isAlive()) {
       particles[i].draw(strip);
-      particles[i].tick();
+      particles[i].frameTick(output_frame_number);
     }
   }
   strip.show();
