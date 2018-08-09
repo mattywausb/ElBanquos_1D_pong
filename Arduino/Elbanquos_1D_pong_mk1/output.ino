@@ -21,10 +21,11 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 #define FRAME_DELAY 1000/FPS
 
 // general elements
-#define SELECT_SCENE_MAIN_COLOR strip.Color(0,120,0)
+#define SELECT_SCENE_MAIN_COLOR_DM(i) dimmedColor(0,120,0,i)
 
 // in game elements
-#define BALL_COLOR strip.Color(255, 255, 0) 
+#define BALL_COLOR strip.Color(200, 200, 0) 
+#define BALL_COLOR_DM(i)  dimmedColor(200, 200, 0,i) 
 #define BALL_COLOR_AFTER_GLOW(i) dimmedColor(20, 10, 0,i)  
 #define BACKGROUND_COLOR strip.Color(0, 0, 0)
 #define BASE_A_COLOR(i) dimmedColor(0, 128, 128,i)
@@ -46,7 +47,8 @@ enum output_scene_t
 {
   GAME_SCENE,
   GAME_OVER_SCENE,
-  GAME_SELECT_SCENE
+  GAME_SELECT_SCENE,
+  BALL_SERVICE_SCENE
 } ;
 
 output_scene_t output_current_scene=GAME_SCENE;
@@ -100,6 +102,7 @@ unsigned long output_frame_tick()
     case GAME_SCENE: output_process_GAME_SCENE(); break;
     case GAME_OVER_SCENE: output_process_GAME_OVER_SCENE(); break;
     case GAME_SELECT_SCENE: output_process_GAME_SELECT_SCENE(); break;
+    case BALL_SERVICE_SCENE: output_process_BALL_SERVICE_SCENE();break;
   }
   return 0;
 }
@@ -138,10 +141,12 @@ void draw_bases_and_score()
   }
 }
 
-
+#define __pulse_dimming(frequency, phaseshift, baseline) ((FPS-((output_frame_number+phaseshift*FPS*10/frequency)%(FPS*10/frequency)))*(255-baseline)/FPS+baseline)
 /*  ************************  scenes  ***********************************
  *  *********************************************************************
  */
+ 
+/* ************ GAME_SELECT_SCENE *************************** */
 
 void output_begin_GAME_SELECT_SCENE() 
 {
@@ -151,10 +156,27 @@ void output_begin_GAME_SELECT_SCENE()
 
 void output_process_GAME_SELECT_SCENE()
 {
-  for(int i=0;i<PIXEL_COUNT;i++) strip.setPixelColor(i,  SELECT_SCENE_MAIN_COLOR);
+  for(int i=0;i<PIXEL_COUNT;i++) strip.setPixelColor(i,  SELECT_SCENE_MAIN_COLOR_DM(64));
   strip.show();
 }
 
+
+/* ************ BALL_SERVICE_SCENE *************************** */
+
+void output_begin_BALL_SERVICE_SCENE() 
+{
+  simpleSceneChange();
+  output_current_scene=BALL_SERVICE_SCENE;
+}
+
+void output_process_BALL_SERVICE_SCENE()
+{
+  strip.clear();
+  draw_bases_and_score();
+  
+  strip.setPixelColor(displayGame->getBallPosition(),  BALL_COLOR_DM(__pulse_dimming(12, 10,0)));
+  strip.show();
+}
  
 
 /* ************ GAME_SCENE *************************** */

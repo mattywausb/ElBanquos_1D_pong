@@ -66,6 +66,7 @@ class PongGame
     void process_PLAYER_SCORES();
     void enter_GAME_OVER() ;
     void process_GAME_OVER();
+    void manageBaseTriggering();
 
 
     /* General game state */

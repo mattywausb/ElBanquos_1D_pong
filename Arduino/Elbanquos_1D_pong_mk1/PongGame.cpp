@@ -104,7 +104,7 @@ void PongGame::enter_START()
     Serial.println(F(">START"));
   #endif
   game_state=START;
-  if(random(0,19)>9)current_scoring_player=PLAYER_A;
+  if(random(19)>9)current_scoring_player=PLAYER_A;
   else current_scoring_player=PLAYER_B;
 };
 
@@ -120,6 +120,16 @@ void PongGame::enter_BALL_SERVICE()
   output_begin_GAME_SCENE ();
   base_A_trigger_millis=0; 
   base_B_trigger_millis=0;
+  if(current_scoring_player==PLAYER_A) 
+  {
+    ball_position=PIXEL_COUNT-1;
+    ball_velocity=-1;
+  }
+  else { 
+    ball_position=0;
+    ball_velocity=1;
+  } 
+  output_begin_BALL_SERVICE_SCENE();
   #ifdef TRACE_PONG_STATE
     Serial.println(F(">BALL_SERVICE"));
   #endif
@@ -127,35 +137,24 @@ void PongGame::enter_BALL_SERVICE()
   
 void PongGame::process_BALL_SERVICE(void)
 {
-  if(current_scoring_player==PLAYER_A) 
+  if(((current_scoring_player==PLAYER_B)&& input_button_A_gotPressed())
+   || ((current_scoring_player==PLAYER_A)&& input_button_B_gotPressed())
+   || output_sceneDurationMillis()>5000)
   {
-     ball_position=PIXEL_COUNT-1;
-     ball_velocity=-1;
-  }
-  else { 
-    ball_position=0;
-    ball_velocity=1;
-  } 
-  game_state=BALL_EXCHANGE; 
+      output_begin_GAME_SCENE ();
+      game_state=BALL_EXCHANGE; 
+    }  
+
+  manageBaseTriggering();
 }
 
 
 
 void PongGame::process_BALL_EXCHANGE(void)
 {
-  if(input_button_A_gotPressed() && game_tick_millis-base_A_trigger_millis>BASE_HOT_RECOVERY) {
-    base_A_trigger_millis=game_tick_millis;
-    base_A_hot=true;
-  }
-  if(base_A_hot &&  game_tick_millis-base_A_trigger_millis>BASE_HOT_DURATION) base_A_hot=false;
-
-  if(input_button_B_gotPressed()&& game_tick_millis-base_B_trigger_millis>BASE_HOT_RECOVERY) {
-    base_B_trigger_millis=game_tick_millis;
-    base_B_hot=true;
-  }
-  if(base_B_hot &&  game_tick_millis-base_B_trigger_millis>BASE_HOT_DURATION) base_B_hot=false;
+ 
+  manageBaseTriggering();
   
-
   if((game_tick_number%10)==0) // primitve method to slow down the ball TODO: Variable speed
   {
     ball_position+=ball_velocity;  // Ball movement
@@ -225,6 +224,19 @@ void PongGame::process_GAME_OVER()
   }
 }
 
+void PongGame::manageBaseTriggering()
+{
+  if(input_button_A_gotPressed() && game_tick_millis-base_A_trigger_millis>BASE_HOT_RECOVERY) {
+    base_A_trigger_millis=game_tick_millis;
+    base_A_hot=true;
+  }
+  if(base_A_hot &&  game_tick_millis-base_A_trigger_millis>BASE_HOT_DURATION) base_A_hot=false;
 
+  if(input_button_B_gotPressed()&& game_tick_millis-base_B_trigger_millis>BASE_HOT_RECOVERY) {
+    base_B_trigger_millis=game_tick_millis;
+    base_B_hot=true;
+  }
+  if(base_B_hot &&  game_tick_millis-base_B_trigger_millis>BASE_HOT_DURATION) base_B_hot=false;
+}
 
 
