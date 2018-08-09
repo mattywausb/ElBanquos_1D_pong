@@ -265,11 +265,11 @@ void output_begin_PLAYER_SCORE_SEQUENCE(byte scoringPlayer)
   strip.clear();
   draw_bases_and_score();
   output_current_sequence=PLAYER_SCORE_SEQUENCE;
-  for(int i=0;i<8;i++) {
-    if(scoringPlayer==PLAYER_A) {
-      effectParticle[i].igniteRandom(255,0,0,11-(i>>1),-100);
+  for(int i=0;i<PARTICLE_COUNT;i+=3) {
+    if(scoringPlayer==PLAYER_B) {
+      effectParticle[i].ignite(0,255,255,0+(i)/3,230+50*i,85);
     } else {
-      effectParticle[i].igniteRandom(0,255,255,0+(i>>1),100);
+      effectParticle[i].ignite(255,0,0,PIXEL_COUNT-1-(i/3),-230-50*i,85);
     }
   }
   

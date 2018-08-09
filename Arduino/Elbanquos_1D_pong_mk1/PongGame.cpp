@@ -104,7 +104,9 @@ void PongGame::enter_START()
     Serial.println(F(">START"));
   #endif
   game_state=START;
-  };
+  if(random(0,19)>9)current_scoring_player=PLAYER_A;
+  else current_scoring_player=PLAYER_B;
+};
 
 void PongGame::process_START()
 {

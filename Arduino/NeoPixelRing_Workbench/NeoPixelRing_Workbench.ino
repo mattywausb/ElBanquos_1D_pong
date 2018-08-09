@@ -27,7 +27,9 @@
 #define BASE_A_COLOR(i) dimmedColor(0, 255, 255,i)
 #define BASE_B_COLOR(i) dimmedColor(50, 00,0,i)
 
-
+  #define PARTICLE_COUNT 10
+  static Particle particles[PARTICLE_COUNT];
+  
 unsigned long output_frame_millis=0;
 unsigned long output_frame_number=0;
 
@@ -35,10 +37,11 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NE
 
 enum program_t {
   dimgrading_scene,
-  particle_party_1
+  particle_party_1,
+  particle_party_2
 };
 
-program_t current_program=particle_party_1;
+program_t current_program=particle_party_2;
 //program_t current_program=dimgrading_scene;
 
 /*  ************************  dimgrading_scene **************************
@@ -106,8 +109,7 @@ unsigned long output_draw_dimgrading_scene()
 void output_draw_particle_party_1()
 {
     
-  #define PARTICLE_COUNT 10
-  static Particle particles[PARTICLE_COUNT];
+
   int i;
 
   if(input_button_A_gotPressed()) {
@@ -127,6 +129,56 @@ void output_draw_particle_party_1()
         if(!particles[i].isAlive()) {
           particles[i].igniteRandom(0,600);
           break;
+        }
+     }
+  }
+   
+  unsigned long current_frame_duration=millis()-output_frame_millis;
+  if(current_frame_duration<FRAME_DELAY) return FRAME_DELAY-current_frame_duration;
+  output_frame_millis=millis();
+  output_frame_number++;
+  #ifdef TRACE_OUTPUT
+      Serial.print(F("Frame:"));Serial.println(output_frame_number);
+  #endif 
+
+ 
+  
+
+  for(i=0;i<PIXEL_COUNT;i++) {// clear strip
+    strip.setPixelColor(i,0);
+  }
+  for(i=0;i<PARTICLE_COUNT;i++) {
+    if(particles[i].isAlive()) {
+      particles[i].draw(strip);
+      particles[i].frameTick(output_frame_number);
+    }
+  }
+  strip.show();
+}
+
+/*  ************************  output_draw_particle_party_2 **************************
+ *  *********************************************************************
+ */
+void output_draw_particle_party_2()
+{
+
+  int i;
+
+  if(input_button_A_gotPressed()) {
+
+      for(i=0;i<PARTICLE_COUNT;i++)
+      {
+        if(!particles[i].isAlive()&&i%2) {
+          particles[i].ignite(255,0,0,11,-100-150*i);
+        }
+     }
+  }
+  if(input_button_B_gotPressed()) {
+
+      for(i=0;i<PARTICLE_COUNT;i++)
+      {
+        if(!particles[i].isAlive()&&i%2==0) {
+          particles[i].ignite(0,0,255,0+(i)/3,230+50*i);
         }
      }
   }
@@ -199,6 +251,13 @@ void loop() {
     case particle_party_1:
 
               output_draw_particle_party_1();
+              if(input_button_B_gotReleased() && input_getLastPressDuration()>3000)
+                 current_program=particle_party_1;
+              
+              break;  
+    case particle_party_2:
+
+              output_draw_particle_party_2();
               if(input_button_B_gotReleased() && input_getLastPressDuration()>3000)
                  current_program=dimgrading_scene;
               

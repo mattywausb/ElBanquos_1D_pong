@@ -23,8 +23,7 @@ void Particle::ignite(int r,int g, int b, int pos, int vlct, byte dcr)
   if(decayrate>99) decayrate=99; // using values >99 would result in infinity life
   
   life=1000;
-   if(velocity>0) acceleration=-15;
-  else acceleration=15;
+  acceleration=-16*velocity/1000;
   
   #ifdef TRACE_PARTICLE
   Serial.println("ignite");
@@ -60,6 +59,7 @@ void Particle::frameTick(unsigned long frame_number)
   if(position>=max_position)  position-=max_position;
    
   velocity+=acceleration;
+  //acceleration=-16*velocity/1000;    // Velocity dependend drag
 
   if(life>0) {
     long_life=life;
