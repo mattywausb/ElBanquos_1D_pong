@@ -187,9 +187,11 @@ void PongGame::enter_PLAYER_SCORES(int player,int amount)
     Serial.println(F(">PLAYER_SCORES"));
   #endif
   
-  // TODO - Play some cool Animation
+  
     player_score[player]+=amount;
+    
     current_scoring_player=player;
+    output_begin_PLAYER_SCORE_SEQUENCE(player);
     if(player_score[player]>=TARGET_SCORE)
     {
       enter_GAME_OVER();
@@ -200,7 +202,7 @@ void PongGame::enter_PLAYER_SCORES(int player,int amount)
      
 void PongGame::process_PLAYER_SCORES(void)
 {
-  delay(1000);
+  while(output_isSequenceRunning()) return;
   enter_BALL_SERVICE();
 }
 

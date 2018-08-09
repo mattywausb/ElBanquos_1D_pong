@@ -3,6 +3,7 @@
 #include "MainSettings.h"
 
 #include "PongGame.h"
+#include "particle.h"
 
 #ifdef TRACE_ON
 //#define TRACE_OUTPUT
@@ -16,7 +17,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 /* Design */
 
 // #define COLOR(r,g,b,i) strip.Color(r*i/255, g*i/255, b*i/255)
-#define FPS 50
+#define FPS 30
 #define FRAME_DELAY 1000/FPS
 
 // general elements
@@ -34,6 +35,10 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 #define BASE_A_POSITION 0
 #define BASE_B_POSITION (PIXEL_COUNT-1)
 
+// general purpose objects for visual design
+#define PARTICLE_COUNT 10
+Particle effectParticle[PARTICLE_COUNT];
+
 /* Output scene and sequence management */
 
 // TODO add another setting for sequences, so sequences can overrule program and fall back to it afterwards
@@ -46,9 +51,18 @@ enum output_scene_t
 
 output_scene_t output_current_scene=GAME_SCENE;
 
+enum output_sequence_t
+{
+  NO_SEQUENCE,
+  PLAYER_SCORE_SEQUENCE
+} ;
+
+output_sequence_t output_current_sequence=NO_SEQUENCE;
+
 unsigned long output_frame_tick_millis=0;
-bool output_sequence_complete=true;
+bool output_sequence_running=false;
 unsigned long output_scene_start_millis=0;
+unsigned long output_sequene_start_millis=0;
 unsigned long output_frame_number=0;
 
 PongGame *displayGame;  // We store this globally as long as there is only one game to present at the same time
@@ -58,8 +72,8 @@ PongGame *displayGame;  // We store this globally as long as there is only one g
 
 /* ------------- General Information --------------- */
 
-bool output_isSequenceComplete() {return output_sequence_complete;}
-
+bool output_isSequenceRunning() {return output_sequence_running;}
+unsigned long output_sequenceDurationMillis() {return millis()-output_sequene_start_millis;}
 unsigned long output_sceneDurationMillis() {return millis()-output_scene_start_millis;}
 
 /*  ************************  tick  ************************************
@@ -73,6 +87,14 @@ unsigned long output_frame_tick()
   output_frame_number++;   // Will be reset by every scene or sequence change
   output_frame_tick_millis=millis();  // globally fixed timestamp for this tick
 
+  if(output_sequence_running) {
+    switch(output_current_sequence)
+    {
+     case PLAYER_SCORE_SEQUENCE: output_process_PLAYER_SCORE_SEQUENCE(); break;
+    }   
+    return 0;  // Sequences overrule scenes
+  }
+
   switch(output_current_scene)
   {
     case GAME_SCENE: output_process_GAME_SCENE(); break;
@@ -81,6 +103,41 @@ unsigned long output_frame_tick()
   }
   return 0;
 }
+
+/*  ************************  parts  ***********************************
+ *  *********************************************************************
+ */
+
+void draw_bases_and_score()
+{
+  for(int i=0;i<PIXEL_COUNT;i++) {
+    
+     /* Base layer */
+      if(i==BASE_A_POSITION) 
+        {
+          if(displayGame->base_A_isTriggered()) strip.setPixelColor(i,BASE_HOT_COLOR);
+          else           strip.setPixelColor(i,BASE_A_COLOR(255));
+          continue;
+      }
+
+      if(i==BASE_B_POSITION) 
+      {
+          if(displayGame->base_B_isTriggered()) strip.setPixelColor(i,BASE_HOT_COLOR);
+          else           strip.setPixelColor(i,BASE_B_COLOR(255));
+          continue;
+       }
+
+       if(i<displayGame->player_A_getScore()+1) {
+        strip.setPixelColor(i, POINT_COLOR);
+        continue;
+       }  
+       if(i>=(PIXEL_COUNT-1-displayGame->player_B_getScore())){
+        strip.setPixelColor(i, POINT_COLOR);
+        continue;
+       }
+  }
+}
+
 
 /*  ************************  scenes  ***********************************
  *  *********************************************************************
@@ -141,6 +198,16 @@ void output_process_GAME_SCENE()
           else           strip.setPixelColor(i,BASE_B_COLOR(255));
           continue;
        }
+
+       if(i<displayGame->player_A_getScore()+1) {
+        strip.setPixelColor(i, POINT_COLOR);
+        continue;
+       }  
+       if(i>=(PIXEL_COUNT-1-displayGame->player_B_getScore())){
+        strip.setPixelColor(i, POINT_COLOR);
+        continue;
+       }
+
         
        /* Background and visual effects */
       
@@ -150,14 +217,7 @@ void output_process_GAME_SCENE()
         continue;
        }
        
-       if(i<displayGame->player_A_getScore()+1) {
-        strip.setPixelColor(i, POINT_COLOR);
-        continue;
-       }  
-       if(i>=(PIXEL_COUNT-1-displayGame->player_B_getScore())){
-        strip.setPixelColor(i, POINT_COLOR);
-        continue;
-       }
+
             
        strip.setPixelColor(i,BACKGROUND_COLOR);           
     }
@@ -193,6 +253,50 @@ void output_process_GAME_OVER_SCENE()
   strip.show();
 }
 
+/*  ************************  sequences  ***********************************
+ *  *********************************************************************
+ */
+
+/* ************ PLAYER_SCORE_SEQUENCE *************************** */
+ 
+void output_begin_PLAYER_SCORE_SEQUENCE(byte scoringPlayer)
+{
+  beginSequence();
+  strip.clear();
+  draw_bases_and_score();
+  output_current_sequence=PLAYER_SCORE_SEQUENCE;
+  for(int i=0;i<8;i++) {
+    if(scoringPlayer==PLAYER_A) {
+      effectParticle[i].igniteRandom(255,0,0,11-(i>>1),-100);
+    } else {
+      effectParticle[i].igniteRandom(0,255,255,0+(i>>1),100);
+    }
+  }
+  
+}
+
+void output_process_PLAYER_SCORE_SEQUENCE()
+{
+  bool particleAlive=false;
+  strip.clear();
+  draw_bases_and_score();
+  
+  for(int i=0;i<PARTICLE_COUNT;i++) 
+  {
+    if(effectParticle[i].isAlive()) 
+    {
+      particleAlive=true;
+      effectParticle[i].draw(strip);
+      effectParticle[i].frameTick(output_frame_number);     
+    }
+  }
+  strip.show();
+ 
+  if(!particleAlive || output_frame_number>=200) fallbackToScene();
+
+}
+
+
 
 /*  ************************  helper  ************************************
  *  *********************************************************************
@@ -211,6 +315,20 @@ void simpleSceneChange()
   strip.show();
   output_frame_number=0;
   output_scene_start_millis=millis();
+}
+
+void beginSequence()
+{
+  output_sequence_running=true;
+  output_sequene_start_millis=millis();
+  output_frame_number=0;
+}
+
+void fallbackToScene()
+{
+    output_sequence_running=false;
+    output_frame_number=0;
+    output_current_sequence=NO_SEQUENCE;
 }
 
 /*  ************************  setup  ************************************

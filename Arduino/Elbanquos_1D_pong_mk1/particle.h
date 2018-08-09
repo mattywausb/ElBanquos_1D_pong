@@ -22,6 +22,8 @@ class Particle
 
         void igniteRandom(int pos, int velocityBase=0); 
 
+        void igniteRandom(int r,int g, int b,int pos, int velocityBase=0);
+
         void ignite(int r,int g, int b, int pos, int vlct, byte dcr);
 
         /* Calculate progress of the particle (must be called for every frame) */

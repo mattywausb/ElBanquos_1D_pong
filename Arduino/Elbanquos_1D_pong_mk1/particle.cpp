@@ -32,22 +32,31 @@ void Particle::ignite(int r,int g, int b, int pos, int vlct, byte dcr)
 }
 
 
-void Particle::igniteRandom(int pos, int velocityBase)
+void Particle::igniteRandom(int pos, int velocityBase=0)
 {
-  colorChannel[0]=230-random(60);  // r
-  colorChannel[1]=255-random(100);  // g
-  colorChannel[2]=255-random(100);  // b
+  igniteRandom( 255-random(200)  // r
+               ,255-random(200)  // g
+               ,255-random(200)  // b
+               ,pos
+               ,velocityBase);
+}
+
+void Particle::igniteRandom(int r,int g, int b,int pos, int velocityBase=0)
+{
+  colorChannel[0]=r;
+  colorChannel[1]=g;
+  colorChannel[2]=b;
   
   position=pos*POSITION_TO_PIXEL_FACTOR;
   if(velocityBase>0) velocity=velocityBase+ random(0,300);
   if(velocityBase<0) velocity=velocityBase- random(0,300);
   if(velocityBase==0) velocity=((random(20)%2)==0?1:-1)*random(700,1000);
-  decayrate=random(70,93);  // decayrate
+  decayrate=random(85,93);  // decayrate
   
   life=1000-random(0,100);
-  if(velocity>0) acceleration=-15-(3-random(0,6));
-  else acceleration=15+(3-random(0,6));
+  acceleration=-(15-(3-random(0,6)))*velocity/1000;
 }
+
      
 void Particle::frameTick(unsigned long frame_number)
 {
