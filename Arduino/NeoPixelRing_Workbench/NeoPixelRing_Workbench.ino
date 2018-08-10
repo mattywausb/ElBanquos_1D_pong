@@ -7,6 +7,13 @@
 #include <Adafruit_NeoPixel.h>
 #include "particle.h"
 
+typedef struct{
+  byte red;
+  byte green;
+  byte blue;
+} colorRGB_t;
+
+
 #define PIXEL_PIN    7    // Digital IO pin connected to the NeoPixels.
 
 #define PIXEL_COUNT 12
@@ -26,6 +33,8 @@
 #define BLACK_COLOR strip.Color(0, 0, 0)
 #define BASE_A_COLOR(i) dimmedColor(0, 255, 255,i)
 #define BASE_B_COLOR(i) dimmedColor(50, 00,0,i)
+
+colorRGB_t base_a_color = {0,255,255};
 
   #define PARTICLE_COUNT 10
   static Particle particles[PARTICLE_COUNT];
@@ -98,7 +107,7 @@ unsigned long output_draw_dimgrading_scene()
       Serial.print(F("Frame:"));Serial.println(output_frame_number);
     #endif
   for(int i=0;i<PIXEL_COUNT;i++) {
-    strip.setPixelColor(i,BASE_A_COLOR(intensity-i*contrast));
+    strip.setPixelColor(i,dimmedColorRGB(base_a_color,(intensity-i*contrast)));
   }
   strip.show();
 }
@@ -215,6 +224,13 @@ uint32_t dimmedColor(int r,int g,int b,int i)
   if(i<0)i=0;
   if(i>255)i=255;
   return strip.Color((r*i)/255, (g*i)/255, (b*i)/255);
+}
+
+uint32_t dimmedColorRGB(colorRGB_t color,int i)
+{
+  if(i<0)i=0;
+  if(i>255)i=255;
+  return strip.Color(color.red*i/255, color.green*i/255, color.blue*i/255);
 }
 
 /*  ************************  setup  ************************************

@@ -297,7 +297,9 @@ void PongGame::enter_GAME_OVER()
   #endif
   //TODO : Play some cool victory Animation
   sound_start_GameOverMelody();
+  output_begin_GAME_OVER_SEQUENCE();
   game_state=GAME_OVER;
+  
   output_begin_GAME_OVER_SCENE();
 }
 
@@ -305,7 +307,7 @@ void PongGame::enter_GAME_OVER()
 
 void PongGame::process_GAME_OVER()
 {
-  if(output_sceneDurationMillis()>5000) {
+  if(output_sceneDurationMillis()>9000 || input_button_A_gotPressed() || input_button_B_gotPressed()) {
     game_state=CLOSING;
   }
 }

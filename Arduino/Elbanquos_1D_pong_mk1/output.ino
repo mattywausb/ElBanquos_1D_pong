@@ -1,19 +1,28 @@
+
+
+
 #include <Adafruit_NeoPixel.h>
 
 #include "MainSettings.h"
 
 #include "PongGame.h"
 #include "particle.h"
+#include "output.h"
 
 #ifdef TRACE_ON
 #define TRACE_OUTPUT_PROGRAM_CHANGE
 //#define TRACE_OUTPUT
 #endif
 
+
+
 /*device */
 
 #define NEO_PIXEL_DATA_PIN    7    // Digital IO pin connected to the NeoPixels.
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO_GRB + NEO_KHZ800);
+
+#define FPS 30
+#define FRAME_DELAY 1000/FPS
 
 /* game */
 
@@ -25,31 +34,33 @@ PongGame *displayGame;  // We store this globally as long as there is only one g
 
 /* Design */
 
-// #define COLOR(r,g,b,i) strip.Color(r*i/255, g*i/255, b*i/255)
-#define FPS 30
-#define FRAME_DELAY 1000/FPS
+struct colorRGB_t {
+  byte red;
+  byte green;
+  byte blue;
+} ;
 
 // general elements
 #define SELECT_SCENE_MAIN_COLOR_DM(i) dimmedColor(0,120,0,i)
 
 // in game elements
+colorRGB_t base_a_color={0, 128, 128};
+colorRGB_t base_b_color={150, 0,0};
+
 #define BALL_COLOR strip.Color(200, 200, 0) 
 #define BALL_COLOR_DM(i)  dimmedColor(200, 200, 0,i) 
 #define BALL_COLOR_AFTER_GLOW(i) dimmedColor(20, 10, 0,i)  
 #define BACKGROUND_COLOR strip.Color(0, 0, 0)
-#define BASE_A_COLOR(i) dimmedColor(0, 128, 128,i)
-#define BASE_B_COLOR(i) dimmedColor(150, 00,0,i)
 #define BASE_HOT_COLOR strip.Color(230,140,0)
 #define POINT_COLOR strip.Color(15,0,30)
 #define BASE_STANDARD_INTENSITY 40
 
 
-
-
-
 // general purpose objects for visual design
 #define PARTICLE_COUNT 10
 Particle effectParticle[PARTICLE_COUNT];
+
+colorRGB_t color_register_a;
 
 /* Output scene and sequence management */
 
@@ -60,14 +71,15 @@ enum output_scene_t
   GAME_OVER_SCENE,
   GAME_SELECT_SCENE,
   BALL_SERVICE_SCENE
-} ;
+};
 
 output_scene_t output_current_scene=GAME_SCENE;
 
 enum output_sequence_t
 {
   NO_SEQUENCE,
-  PLAYER_SCORE_SEQUENCE
+  PLAYER_SCORE_SEQUENCE,
+  GAME_OVER_SEQUENCE
 } ;
 
 output_sequence_t output_current_sequence=NO_SEQUENCE;
@@ -104,6 +116,7 @@ unsigned long output_frame_tick()
     switch(output_current_sequence)
     {
      case PLAYER_SCORE_SEQUENCE: output_process_PLAYER_SCORE_SEQUENCE(); break;
+     case GAME_OVER_SEQUENCE: output_process_GAME_OVER_SEQUENCE();break;
     }   
     return 0;  // Sequences overrule scenes
   }
@@ -140,10 +153,10 @@ void draw_score()
 void draw_bases(byte intensity=BASE_STANDARD_INTENSITY)
 {
   if(displayGame->getBase_A_State()==BASE_CLOSED || displayGame->getBase_A_State()==BASE_BOOST) strip.setPixelColor(BASE_A_POSITION,BASE_HOT_COLOR);
-  else    strip.setPixelColor(BASE_A_POSITION,BASE_A_COLOR(intensity));
+  else    strip.setPixelColor(BASE_A_POSITION,dimmedColorRGB(base_a_color,intensity));
 
   if(displayGame->getBase_B_State()==BASE_CLOSED || displayGame->getBase_B_State()==BASE_BOOST) strip.setPixelColor(BASE_B_POSITION,BASE_HOT_COLOR);
-  else    strip.setPixelColor(BASE_B_POSITION,BASE_B_COLOR(intensity));
+  else    strip.setPixelColor(BASE_B_POSITION,dimmedColorRGB(base_b_color,intensity));
 }
 
 #define __pulse_dimming(frequency, phaseshift, baseline) ((FPS-((output_frame_number+phaseshift*FPS*10/frequency)%(FPS*10/frequency)))*(255-baseline)/FPS+baseline)
@@ -244,20 +257,9 @@ void output_begin_GAME_OVER_SCENE()
 
 void output_process_GAME_OVER_SCENE()
 {
-  uint32_t color;
-
-  if(displayGame->player_getWinner()==PLAYER_A) {
-      color=BASE_A_COLOR(((FPS-(output_frame_number%FPS))*255/FPS));
-  }
-  if(displayGame->player_getWinner()==PLAYER_B) {
-      color=BASE_B_COLOR(((FPS-(output_frame_number%FPS))*255/FPS));
-  }
-  if(displayGame->player_getWinner()==NONE) {
-      color=BALL_COLOR_AFTER_GLOW(255);
-  }
-  for(int i=0;i<PIXEL_COUNT;i++) {
-    strip.setPixelColor(i,color);
-  }
+  strip.clear();
+  draw_score();
+  draw_bases();  // TODO; Pulse score of winner
   strip.show();
 }
 
@@ -309,6 +311,43 @@ void output_process_PLAYER_SCORE_SEQUENCE()
 
 }
 
+/* ************ GAME_OVER_SCENE *************************** */
+
+
+void output_begin_GAME_OVER_SEQUENCE()
+{
+  beginSequence();
+  output_current_sequence=GAME_OVER_SEQUENCE;
+  #ifdef TRACE_OUTPUT_PROGRAM_CHANGE
+     Serial.println(F(">GAME_OVER_SEQUENCE"));
+  #endif
+  
+  if(displayGame->player_getWinner()==PLAYER_A)
+          color_register_a=base_a_color;
+  if(displayGame->player_getWinner()==PLAYER_B)
+          color_register_a=base_b_color;
+
+}
+
+void output_process_GAME_OVER_SEQUENCE()
+{
+
+  if(output_frame_number>4*FPS) fallbackToScene ();
+
+  int pixel=output_frame_number/5;
+  if(pixel<4) {   // Initial animation (5x4 = 20 Frames), Directly addressed for 12 pixel ring
+       strip.setPixelColor(pixel+3,dimmedColorRGB(color_register_a,255));
+        strip.setPixelColor(3-pixel,dimmedColorRGB(color_register_a,255));
+        strip.setPixelColor(8-pixel,dimmedColorRGB(color_register_a,255));
+        strip.setPixelColor(8+pixel,dimmedColorRGB(color_register_a,255));
+ } else {    // Pulse 
+      for(int i=0;i<PIXEL_COUNT;i++) {
+    strip.setPixelColor(i,dimmedColorRGB(color_register_a,  ((FPS-(output_frame_number%FPS))*255/FPS) ) );
+     }
+  }
+
+  strip.show();
+}
 
 
 /*  ************************  helper  ************************************
@@ -322,10 +361,15 @@ uint32_t dimmedColor(int r,int g,int b,int i)
   return strip.Color(r*i/255, g*i/255, b*i/255);
 }
 
+
+
 void simpleSceneChange()
 {
-  strip.clear();
-  output_frame_number=0;
+  if(!output_sequence_running) 
+  {
+    strip.clear();
+    output_frame_number=0;
+  }
   output_scene_start_millis=millis();
 }
 
@@ -359,4 +403,13 @@ void output_setup(PongGame *globalPongGame)
   displayGame=globalPongGame;
 }
 
+
+
+
+uint32_t dimmedColorRGB(struct colorRGB_t myColor,int i)
+{
+  if(i<0)i=0;
+  if(i>255)i=255;
+  return strip.Color(myColor.red*i/255, myColor.green*i/255, myColor.blue*i/255);
+}
 
