@@ -8,8 +8,7 @@
 #define TICKS_PER_SECOND 60
 #define MILLIS_PER_TICK 1000/TICKS_PER_SECOND
 #define TICKS_PER_MOVEMENT 2
-#define STANDARD_TRAVERSAL_TIME 1800
-#define STANDARD_TRAVERSAL_TICKS STANDARD_TRAVERSAL_TIME/(MILLIS_PER_TICK)/2
+#define STANDARD_TRAVERSAL_TIME 1400
 
 #define BASE_BOOST_DURATION 150
 #define BASE_CLOSED_DURATION 500
@@ -90,13 +89,14 @@ class PongGame
     unsigned long game_tick_number=0;
     int game_gridsize=0;   //* Meaning 0= baseA and gridsize-1=Base B)
     int standard_velocity=0;
-    
+    int level_velocity=0;
+    int hitcount=0;    
 
     /* Ball state */
     int ball_position=0;
     int ball_velocity=0;
     int ball_direction=0;
-    int level_velocity=0;
+
 
     /* Base state */
     unsigned long base_A_trigger_millis=0;
