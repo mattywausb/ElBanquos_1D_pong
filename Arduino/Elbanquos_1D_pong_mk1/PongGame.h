@@ -11,9 +11,9 @@
 #define STANDARD_TRAVERSAL_TIME 1800
 #define STANDARD_TRAVERSAL_TICKS STANDARD_TRAVERSAL_TIME/(MILLIS_PER_TICK)/2
 
-
-#define BASE_HOT_DURATION 500
-#define BASE_HOT_RECOVERY 1000
+#define BASE_BOOST_DURATION 150
+#define BASE_CLOSED_DURATION 500
+#define BASE_RECOVERY_DURATION 1000
 
 #define PLAYER_A 0
 #define PLAYER_B 1
@@ -28,6 +28,13 @@ enum GAME_STATES {
   PLAYER_SCORES,
   GAME_OVER,
   CLOSING
+};
+
+enum base_state_enum {
+  BASE_BOOST,
+  BASE_CLOSED,
+  BASE_OPEN,
+  BASE_RECOVERY
 };
 
 class PongGame
@@ -52,8 +59,8 @@ class PongGame
     bool isClosing();
     
     unsigned int getBallPosition();
-    bool base_A_isTriggered();
-    bool base_B_isTriggered();
+    base_state_enum getBase_A_State();
+    base_state_enum getBase_B_State();
     int  player_A_getScore();
     int  player_B_getScore();
     byte player_getWinner();
@@ -89,9 +96,9 @@ class PongGame
 
     /* Base state */
     unsigned long base_A_trigger_millis=0;
-    bool base_A_hot=false;
+    base_state_enum base_A_state=BASE_OPEN;
     unsigned long base_B_trigger_millis=0;
-    bool base_B_hot=false;
+    base_state_enum base_B_state=BASE_OPEN;
 
     /* Player score */
     byte player_score[2]={0,0};

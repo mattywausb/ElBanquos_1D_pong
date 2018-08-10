@@ -35,9 +35,9 @@ void PongGame::setupGame(void)
     game_tick_millis=0;
 
     base_A_trigger_millis=0;
-    base_A_hot=false;
+    base_A_state=BASE_OPEN;
     base_B_trigger_millis=0;
-    base_B_hot=false;
+    base_B_state=BASE_OPEN;
     
     player_score[PLAYER_A]=0;
     player_score[PLAYER_B]=0;
@@ -76,9 +76,9 @@ bool PongGame::isClosing()
 
 unsigned int PongGame::getBallPosition(){return ball_position;}
 
-bool PongGame::base_A_isTriggered() {return base_A_hot;}
+base_state_enum PongGame::getBase_A_State() {return base_A_state;}
 
-bool PongGame::base_B_isTriggered() {return base_B_hot;}
+base_state_enum PongGame::getBase_B_State() {return base_B_state;}
 
 int  PongGame::player_A_getScore() {return  player_score[PLAYER_A];}
 
@@ -192,10 +192,11 @@ void PongGame::process_BALL_EXCHANGE(void)
     ball_position+=ball_velocity;  // Ball movement
     
     if(ball_position<0) {         // Ball reached Base A
-      if(base_A_hot)   
+      if(base_A_state==BASE_CLOSED || base_A_state==BASE_BOOST)   
       {
-        ball_velocity = standard_velocity;
+        ball_velocity = (base_A_state==BASE_BOOST?standard_velocity<<1:standard_velocity);
         ball_position = ball_velocity;  // Reflect the ball
+        //TODO Trigger Sound
 
       }  else {
         enter_PLAYER_SCORES(PLAYER_B,1);
@@ -204,10 +205,11 @@ void PongGame::process_BALL_EXCHANGE(void)
     }
 
     if(ball_position>=game_gridsize) {         // Ball reached Base B
-      if(base_B_hot)   
+      if(base_B_state==BASE_CLOSED || base_B_state==BASE_BOOST)   
       {
-        ball_velocity = -standard_velocity;
+        ball_velocity = -(base_B_state==BASE_BOOST?standard_velocity<<1:standard_velocity);
         ball_position=game_gridsize-1-ball_velocity;  // Reflect the ball
+        //TODO Trigger Sound
       }  else {
         enter_PLAYER_SCORES(PLAYER_A,1);
         return;
@@ -272,17 +274,51 @@ void PongGame::process_GAME_OVER()
 /** ---------  Check and switch hot states of bases ---- */  
 void PongGame::manageBaseTriggering()
 {
-  if(input_button_A_gotPressed() && game_tick_millis-base_A_trigger_millis>BASE_HOT_RECOVERY) {
-    base_A_trigger_millis=game_tick_millis;
-    base_A_hot=true;
+  switch(base_A_state) {
+    case BASE_OPEN: 
+                    if(input_button_A_gotPressed())  // Only in open State we accept a button press as valid
+                    {
+                      base_A_trigger_millis=game_tick_millis;
+                      base_A_state=BASE_BOOST;
+                    }
+                    break;
+    case BASE_BOOST:
+                    if(game_tick_millis-base_A_trigger_millis>BASE_BOOST_DURATION) base_A_state=BASE_CLOSED;
+                    break;
+    case BASE_CLOSED:
+                    if(game_tick_millis-base_A_trigger_millis>BASE_CLOSED_DURATION) base_A_state=BASE_RECOVERY;
+                    break;
+    case BASE_RECOVERY:
+                    if(game_tick_millis-base_A_trigger_millis> BASE_RECOVERY_DURATION) base_A_state=BASE_OPEN;
+                    break;      
+    default:
+             base_A_state=BASE_OPEN;    
+                
   }
-  if(base_A_hot &&  game_tick_millis-base_A_trigger_millis>BASE_HOT_DURATION) base_A_hot=false;
 
-  if(input_button_B_gotPressed()&& game_tick_millis-base_B_trigger_millis>BASE_HOT_RECOVERY) {
-    base_B_trigger_millis=game_tick_millis;
-    base_B_hot=true;
+  switch(base_B_state) {
+    case BASE_OPEN: 
+                    if(input_button_B_gotPressed())  // Only in open State we accept a button press as valid
+                    {
+                      base_B_trigger_millis=game_tick_millis;
+                      base_B_state=BASE_BOOST;
+                    }
+                    break;
+    case BASE_BOOST:
+                    if(game_tick_millis-base_B_trigger_millis>BASE_BOOST_DURATION) base_B_state=BASE_CLOSED;
+                    break;
+    case BASE_CLOSED:
+                    if(game_tick_millis-base_B_trigger_millis>BASE_CLOSED_DURATION) base_B_state=BASE_RECOVERY;
+                    break;
+    case BASE_RECOVERY:
+                    if(game_tick_millis-base_B_trigger_millis> BASE_RECOVERY_DURATION) base_B_state=BASE_OPEN;
+                    break;      
+    default:
+             base_B_state=BASE_OPEN;    
+                
   }
-  if(base_B_hot &&  game_tick_millis-base_B_trigger_millis>BASE_HOT_DURATION) base_B_hot=false;
+  
+
 }
 
 
