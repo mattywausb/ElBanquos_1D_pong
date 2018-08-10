@@ -14,6 +14,8 @@
 #define BASE_BOOST_DURATION 150
 #define BASE_CLOSED_DURATION 500
 #define BASE_RECOVERY_DURATION 1000
+#define TICKS_UNTIL_AUTOMATIC_ACCELERATION 600
+
 
 #define PLAYER_A 0
 #define PLAYER_B 1
@@ -93,6 +95,8 @@ class PongGame
     /* Ball state */
     int ball_position=0;
     int ball_velocity=0;
+    int ball_direction=0;
+    int level_velocity=0;
 
     /* Base state */
     unsigned long base_A_trigger_millis=0;

@@ -135,6 +135,8 @@ void PongGame::enter_START()
   game_state=START;
   if(random(19)>9)current_scoring_player=PLAYER_A;
   else current_scoring_player=PLAYER_B;
+
+  level_velocity= standard_velocity;
 };
 
 void PongGame::process_START()
@@ -151,13 +153,15 @@ void PongGame::enter_BALL_SERVICE()
   output_begin_GAME_SCENE ();
   base_A_trigger_millis=0; 
   base_B_trigger_millis=0;
+  level_velocity = standard_velocity;   // This might be changed later to some fancy logic
+  ball_velocity = level_velocity;
   if(current_scoring_player==PLAYER_A) 
   {
-    ball_velocity = -standard_velocity;
+    ball_direction = -1;
     ball_position =game_gridsize-1;  // position ball in base B
   }
   else { 
-    ball_velocity = standard_velocity;
+    ball_direction = 1;
     ball_position = 0;  // position ball in base A
   } 
   output_begin_BALL_SERVICE_SCENE();
@@ -193,14 +197,20 @@ void PongGame::process_BALL_EXCHANGE(void)
   /* Ball movement */ 
   if((game_tick_number%TICKS_PER_MOVEMENT)==0) 
   {
-    ball_position+=ball_velocity;  // Ball movement
+    ball_position+=ball_velocity*ball_direction;  // Ball movement
     
     if(ball_position<0) {         // Ball reached Base A
       if(base_A_state==BASE_CLOSED || base_A_state==BASE_BOOST)   
       {
-        ball_velocity = (base_A_state==BASE_BOOST?standard_velocity<<1:standard_velocity);
+        ball_direction = 1;
+        if(base_A_state==BASE_BOOST) {
+          ball_velocity=level_velocity<<1;  //Double speed
+          level_velocity+=2;                
+        } else ball_velocity=level_velocity;
         ball_position = ball_velocity;  // Reflect the ball
         //TODO Trigger Sound
+
+        return;
 
       }  else {
         enter_PLAYER_SCORES(PLAYER_B,1);
@@ -211,14 +221,25 @@ void PongGame::process_BALL_EXCHANGE(void)
     if(ball_position>=game_gridsize) {         // Ball reached Base B
       if(base_B_state==BASE_CLOSED || base_B_state==BASE_BOOST)   
       {
-        ball_velocity = -(base_B_state==BASE_BOOST?standard_velocity<<1:standard_velocity);
+        ball_direction = -1;
+        if(base_B_state==BASE_BOOST) {
+          ball_velocity=level_velocity<<1;  //Double speed
+          level_velocity+=2;                
+        } else ball_velocity=level_velocity;
         ball_position=game_gridsize-1-ball_velocity;  // Reflect the ball
         //TODO Trigger Sound
+        return;
+
       }  else {
         enter_PLAYER_SCORES(PLAYER_A,1);
         return;
       }
     }
+  }
+
+  if(game_tick_number%TICKS_UNTIL_AUTOMATIC_ACCELERATION==0) 
+  {
+    level_velocity+=2;
   }
 }
 
