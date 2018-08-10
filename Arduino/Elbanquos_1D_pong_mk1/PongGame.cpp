@@ -4,6 +4,7 @@
 
 #include "input.h"
 #include "output.h"
+#include "sound.h"
 
 #define TARGET_SCORE 5
 
@@ -21,8 +22,6 @@ PongGame::PongGame(int gridsize)
 
   int standard_traversal_ticks= (STANDARD_TRAVERSAL_TIME/(MILLIS_PER_TICK)/2);
   standard_velocity=game_gridsize / standard_traversal_ticks;
-
-
   
   setupGame();
 }
@@ -137,10 +136,14 @@ void PongGame::enter_START()
   else current_scoring_player=PLAYER_B;
 
   level_velocity= standard_velocity;
+  // TODO Trigger Start Animation
+  sound_start_GameStartMelody();
+
 };
 
 void PongGame::process_START()
 {
+  if(sound_isPlaying()) return;
   enter_BALL_SERVICE();
 };
 
@@ -181,7 +184,7 @@ void PongGame::process_BALL_SERVICE(void)
       base_B_state=BASE_OPEN;
       game_state=BALL_EXCHANGE; 
       output_begin_GAME_SCENE ();
-      //TODO Play start EXCHANGE Sound
+      sound_start_Ping();
     }  
 
   manageBaseTriggering();
@@ -204,9 +207,13 @@ void PongGame::process_BALL_EXCHANGE(void)
       {
         ball_direction = 1;
         if(base_A_state==BASE_BOOST) {
+          sound_start_Ping();
           ball_velocity=level_velocity<<1;  //Double speed
           level_velocity+=2;                
-        } else ball_velocity=level_velocity;
+        } else {
+          sound_start_Pong();
+          ball_velocity=level_velocity;
+        }
         ball_position = ball_velocity;  // Reflect the ball
         //TODO Trigger Sound
 
@@ -223,9 +230,13 @@ void PongGame::process_BALL_EXCHANGE(void)
       {
         ball_direction = -1;
         if(base_B_state==BASE_BOOST) {
+          sound_start_Ping();
           ball_velocity=level_velocity<<1;  //Double speed
           level_velocity+=2;                
-        } else ball_velocity=level_velocity;
+        } else {
+          sound_start_Pong();
+          ball_velocity=level_velocity;
+        }
         ball_position=game_gridsize-1-ball_velocity;  // Reflect the ball
         //TODO Trigger Sound
         return;
@@ -250,23 +261,23 @@ void PongGame::enter_PLAYER_SCORES(int player,int amount)
   #ifdef TRACE_PONG_STATE
     Serial.println(F(">PLAYER_SCORES"));
   #endif
-  
-  
-    player_score[player]+=amount;
+  player_score[player]+=amount;
     
-    current_scoring_player=player;
-    output_begin_PLAYER_SCORE_SEQUENCE(player);
-    if(player_score[player]>=TARGET_SCORE)
-    {
-      enter_GAME_OVER();
-      return;
-    }
-    game_state=PLAYER_SCORES;
+  current_scoring_player=player;
+  output_begin_PLAYER_SCORE_SEQUENCE(player);
+  sound_start_Crash();
+
+  game_state=PLAYER_SCORES;
 }
      
 void PongGame::process_PLAYER_SCORES(void)
 {
-  while(output_isSequenceRunning()) return;
+ while(output_isSequenceRunning()) return;
+ if(player_score[current_scoring_player]>=TARGET_SCORE)
+ {    
+      enter_GAME_OVER();
+      return;
+  }
   enter_BALL_SERVICE();
 }
 
@@ -278,6 +289,7 @@ void PongGame::enter_GAME_OVER()
     Serial.println(F(">GAME_OVER"));
   #endif
   //TODO : Play some cool victory Animation
+  sound_start_GameOverMelody();
   game_state=GAME_OVER;
   output_begin_GAME_OVER_SCENE();
 }

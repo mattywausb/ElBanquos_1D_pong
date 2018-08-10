@@ -24,6 +24,7 @@ void setup() {
 
   input_setup() ;
   output_setup(&theGame);
+  sound_setup();
   output_begin_GAME_SELECT_SCENE();
 }
 
@@ -33,7 +34,8 @@ void loop() {
    {
    unsigned long game_tick_delay=theGame.process_tick();
    unsigned long output_frame_delay=output_frame_tick();
-   delay(min(game_tick_delay,output_frame_delay ) );    
+   unsigned long output_sound_delay=sound_tick();;
+   delay(min(game_tick_delay,min(output_frame_delay,output_sound_delay )) );    
    return;
    }
 
@@ -51,5 +53,6 @@ void loop() {
       theGame.startGame();
       return;
    }
+   sound_tick();
    output_frame_tick(); 
 }
