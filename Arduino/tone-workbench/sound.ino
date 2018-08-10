@@ -140,10 +140,17 @@ note_t melody_1[] = {
 
 /* management Variables */
 
-byte sound_active_melody=255;  /* 255 means off */ 
+enum sound_effects {
+  sound_off,
+  sound_play_melody
+};
+sound_effects sound_current_effect=sound_off;
+
+note_t *sound_active_melody;
+
 unsigned int sound_active_melody_length=0; /* max index in the note Array */
 byte sound_current_note;
-unsigned int sound_note_total_length_millis=0;
+unsigned int sound_wait_millis=0;
 
 
 unsigned long sound_last_tick_time=0;
@@ -156,20 +163,21 @@ byte sound_current_frame=0;
 
 void sound_playMelody1()
 {
-  sound_active_melody=0;
+  sound_current_effect=sound_play_melody;
   sound_current_note=0;
-  sound_note_total_length_millis=0;
+  sound_wait_millis=0;
   sound_calculate_full_note_duration(120);
+  sound_active_melody=&melody_1[0];
   sound_active_melody_length=sizeof(melody_1)/sizeof(melody_1[0]);
   #ifdef TRACE_SOUND
-         Serial.print(F("sound_active_melody_lenth=")); Serial.println(sound_active_melody_length);
+         Serial.print(F("sound_active_sound_lenth=")); Serial.println(sound_active_melody_length);
   #endif
   
 }
 
-void sound_stopMelody()
+void sound_stop()
 {
-  sound_active_melody=255;
+  sound_current_effect=sound_off;
   noTone(SOUND_OUT_PIN);
     #ifdef TRACE_SOUND
          Serial.println(F("sound_stopMelody")); 
@@ -186,6 +194,36 @@ void sound_calculate_full_note_duration(long beats_per_minute)
    
 }
 
+void sound_play_next_note()
+{
+   if(sound_current_note>=sound_active_melody_length) 
+    {
+      sound_stop();
+      return;
+    }
+  
+   int note_duration=0;
+  
+      #ifdef TRACE_SOUND
+          Serial.print(sound_current_note);Serial.print(F(":"));
+          Serial.print(sound_active_melody[sound_current_note].note_index);Serial.print(F("/"));
+          Serial.print(sound_active_melody[sound_current_note].note_length);Serial.print(F("="));
+      #endif
+          
+    if(sound_active_melody[sound_current_note].note_index!=NOTE_PAUSE)
+    {
+      note_duration=sound_full_note_duration/sound_active_melody[sound_current_note].note_length;
+      sound_wait_millis=note_duration+3; // This creates a small gap bewen all tones
+      tone(SOUND_OUT_PIN, note_palette[sound_active_melody[sound_current_note].note_index], note_duration);
+      #ifdef TRACE_SOUND
+
+          Serial.print(sound_wait_millis);Serial.println(F("ms"));
+      #endif
+    } 
+    ++sound_current_note;
+}
+  
+
 /* *************************** TICK *************************************
    Must be called every tick of the core loop
    Manages playing the melody in the background 
@@ -193,32 +231,15 @@ void sound_calculate_full_note_duration(long beats_per_minute)
 
 void sound_tick()
 {
-  int note_duration=0;
-  
-  if(sound_active_melody==255) return;
 
-  if(millis()-sound_last_tick_time>sound_note_total_length_millis) 
+  if(sound_current_effect==sound_off) return;
+
+  if(millis()-sound_last_tick_time>sound_wait_millis) 
   {
     sound_last_tick_time=millis();
-    if(sound_current_note>=sound_active_melody_length) 
-    {
-      sound_stopMelody();
-      return;
+    switch (sound_current_effect) {
+      case sound_play_melody: sound_play_next_note(); break;
     }
-    
-    if(melody_1[sound_current_note].note_index!=NOTE_PAUSE)
-    {
-      note_duration=sound_full_note_duration/melody_1[sound_current_note].note_length;
-      sound_note_total_length_millis=note_duration+3; // This creates a small gap bewen all tones
-      tone(SOUND_OUT_PIN, note_palette[melody_1[sound_current_note].note_index], note_duration);
-      #ifdef TRACE_SOUND
-          Serial.print(sound_current_note);Serial.print(F(":"));
-          Serial.print(melody_1[sound_current_note].note_index);Serial.print(F("/"));
-          Serial.print(melody_1[sound_current_note].note_length);Serial.print(F("="));
-          Serial.print(sound_note_total_length_millis);Serial.println(F("ms"));
-      #endif
-    } 
-    ++sound_current_note;
   }
 }
 

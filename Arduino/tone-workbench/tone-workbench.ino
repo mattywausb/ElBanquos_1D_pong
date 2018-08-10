@@ -20,17 +20,29 @@ void setup() {
    void sound_setup() ;
 }
 
+enum state {
+  melody1,
+  melody2
+} current_state=melody1;
+
 void loop() {
 
+ 
+
     if(!digitalRead(TRIGGER_BUTTON_PIN)) {
-      sound_playMelody1();
+      sound_stop();
+      switch(current_state) 
+      {
+        case melody1: sound_playMelody1(); break;
+      }
       Serial.println("TRIGGER_BUTTON");
       delay(500); // just debounce
     }
+    
     if(!digitalRead(STOP_BUTTON_PIN)) 
     {
        Serial.println("STOP_BUTTON"); 
-       sound_stopMelody();    
+       sound_stop();    
       delay(500); // just debounce
     }
     sound_tick();    
