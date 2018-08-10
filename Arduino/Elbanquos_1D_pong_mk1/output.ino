@@ -41,6 +41,7 @@ PongGame *displayGame;  // We store this globally as long as there is only one g
 #define BASE_B_COLOR(i) dimmedColor(150, 00,0,i)
 #define BASE_HOT_COLOR strip.Color(230,140,0)
 #define POINT_COLOR strip.Color(15,0,30)
+#define BASE_STANDARD_INTENSITY 40
 
 
 
@@ -136,13 +137,13 @@ void draw_score()
   }
 };
 
-void draw_bases()
+void draw_bases(byte intensity=BASE_STANDARD_INTENSITY)
 {
   if(displayGame->getBase_A_State()==BASE_CLOSED || displayGame->getBase_A_State()==BASE_BOOST) strip.setPixelColor(BASE_A_POSITION,BASE_HOT_COLOR);
-  else    strip.setPixelColor(BASE_A_POSITION,BASE_A_COLOR(255));
+  else    strip.setPixelColor(BASE_A_POSITION,BASE_A_COLOR(intensity));
 
   if(displayGame->getBase_B_State()==BASE_CLOSED || displayGame->getBase_B_State()==BASE_BOOST) strip.setPixelColor(BASE_B_POSITION,BASE_HOT_COLOR);
-  else    strip.setPixelColor(BASE_B_POSITION,BASE_B_COLOR(255));
+  else    strip.setPixelColor(BASE_B_POSITION,BASE_B_COLOR(intensity));
 }
 
 #define __pulse_dimming(frequency, phaseshift, baseline) ((FPS-((output_frame_number+phaseshift*FPS*10/frequency)%(FPS*10/frequency)))*(255-baseline)/FPS+baseline)
@@ -211,54 +212,22 @@ void output_process_GAME_SCENE()
        afterglow_position=previous_ball_position;
        previous_ball_position=_get_ball_pixelPosition;      
   }
+
+  /* draw  */
+  strip.clear();
+  draw_score();
   
-  for(int i=0;i<PIXEL_COUNT;i++) {
+  /* Visual Effects */
+  if(afterglow_position<PIXEL_COUNT)
+  {
+      strip.setPixelColor(afterglow_position,BALL_COLOR_AFTER_GLOW(255));
+  }
+  
+  draw_bases();
 
-      /* Ball Layer */
-      if(i==_get_ball_pixelPosition) {
-        strip.setPixelColor(i, BALL_COLOR);
-        continue;
-      }
-
-      /* Base layer */
-      if(i==BASE_A_POSITION) 
-        {
-          if(displayGame->getBase_A_State()==BASE_CLOSED || displayGame->getBase_A_State()==BASE_BOOST) strip.setPixelColor(i,BASE_HOT_COLOR);
-          else           strip.setPixelColor(i,BASE_A_COLOR(255));
-          continue;
-      }
-
-      if(i==BASE_B_POSITION) 
-      {
-          if(displayGame->getBase_B_State()==BASE_CLOSED || displayGame->getBase_B_State()==BASE_BOOST) strip.setPixelColor(i,BASE_HOT_COLOR);
-          else           strip.setPixelColor(i,BASE_B_COLOR(255));
-          continue;
-       }
-
-       if(i<displayGame->player_A_getScore()+1) {
-        strip.setPixelColor(i, POINT_COLOR);
-        continue;
-       }  
-       if(i>=(PIXEL_COUNT-1-displayGame->player_B_getScore())){
-        strip.setPixelColor(i, POINT_COLOR);
-        continue;
-       }
-
-        
-       /* Background and visual effects */
-      
-       if(i==afterglow_position)
-       {
-        strip.setPixelColor(i,BALL_COLOR_AFTER_GLOW(255));
-        continue;
-       }
-       
-
-            
-       strip.setPixelColor(i,BACKGROUND_COLOR);           
-    }
-     
-    strip.show();
+  /* Ball */ 
+  strip.setPixelColor(_get_ball_pixelPosition, BALL_COLOR);     
+  strip.show();
 }
 
 /* ************ GAME_OVER_SCENE *************************** */
@@ -321,7 +290,9 @@ void output_process_PLAYER_SCORE_SEQUENCE()
   bool particleAlive=false;
   strip.clear();
   
-  if(output_frame_number>=4) draw_bases();
+  if(output_frame_number<=4) draw_bases(255);
+  else if(output_frame_number<=20) draw_bases(255-output_frame_number*10);
+      else draw_bases(180);
   
   for(int i=0;i<PARTICLE_COUNT;i++) 
   {
