@@ -22,7 +22,7 @@ void setup() {
 
 enum state {
   melody1,
-  melody2
+  crash
 } current_state=melody1;
 
 void loop() {
@@ -33,7 +33,8 @@ void loop() {
       sound_stop();
       switch(current_state) 
       {
-        case melody1: sound_playMelody1(); break;
+        case melody1: sound_start_Melody1(); break;
+        case crash: sound_start_Crash(); break;
       }
       Serial.println("TRIGGER_BUTTON");
       delay(500); // just debounce
@@ -43,6 +44,11 @@ void loop() {
     {
        Serial.println("STOP_BUTTON"); 
        sound_stop();    
+      switch(current_state) 
+      {
+        case melody1: current_state=crash; break;
+        case crash: current_state=melody1; break;
+      }
       delay(500); // just debounce
     }
     sound_tick();    

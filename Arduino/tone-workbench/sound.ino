@@ -142,14 +142,15 @@ note_t melody_1[] = {
 
 enum sound_effects {
   sound_off,
-  sound_play_melody
+  sound_melody,
+  sound_crash
 };
 sound_effects sound_current_effect=sound_off;
 
 note_t *sound_active_melody;
 
 unsigned int sound_active_melody_length=0; /* max index in the note Array */
-byte sound_current_note;
+unsigned int  sound_current_note;
 unsigned int sound_wait_millis=0;
 
 
@@ -161,9 +162,19 @@ byte sound_current_frame=0;
  *  *********************************************************************
  */
 
-void sound_playMelody1()
+void sound_stop()
 {
-  sound_current_effect=sound_play_melody;
+  sound_current_effect=sound_off;
+  noTone(SOUND_OUT_PIN);
+  #ifdef TRACE_SOUND
+    Serial.print(F("sound_stopMelody. Current note:")); Serial.println(sound_current_note);         
+  #endif
+}
+
+
+void sound_start_Melody1()
+{
+  sound_current_effect=sound_melody;
   sound_current_note=0;
   sound_wait_millis=0;
   sound_calculate_full_note_duration(120);
@@ -171,18 +182,28 @@ void sound_playMelody1()
   sound_active_melody_length=sizeof(melody_1)/sizeof(melody_1[0]);
   #ifdef TRACE_SOUND
          Serial.print(F("sound_active_sound_lenth=")); Serial.println(sound_active_melody_length);
-  #endif
+  #endif 
+}
+
+
+void sound_start_Crash()
+{
+  sound_current_effect=sound_crash;
+  sound_current_note=0;
+  sound_wait_millis=0;
+  #ifdef TRACE_SOUND
+         Serial.print(F("sound_active_sound_lenth=")); Serial.println(sound_active_melody_length);
+  #endif 
+}
+
+void sound_play_crash(){
+  tone(SOUND_OUT_PIN, random(420-sound_current_note,1000-sound_current_note>>1));
+  sound_wait_millis=1;
+  if(++sound_current_note>400) sound_stop();
   
 }
 
-void sound_stop()
-{
-  sound_current_effect=sound_off;
-  noTone(SOUND_OUT_PIN);
-    #ifdef TRACE_SOUND
-         Serial.println(F("sound_stopMelody")); 
-  #endif
-}
+
 
 void sound_calculate_full_note_duration(long beats_per_minute)
 {
@@ -238,7 +259,8 @@ void sound_tick()
   {
     sound_last_tick_time=millis();
     switch (sound_current_effect) {
-      case sound_play_melody: sound_play_next_note(); break;
+      case sound_melody: sound_play_next_note(); break;
+      case sound_crash: sound_play_crash();break;
     }
   }
 }
