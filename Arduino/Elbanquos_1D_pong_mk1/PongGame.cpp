@@ -161,6 +161,7 @@ void PongGame::enter_BALL_SERVICE()
     ball_position = 0;  // position ball in base A
   } 
   output_begin_BALL_SERVICE_SCENE();
+  input_pauseUntilRelease();
   #ifdef TRACE_PONG_STATE
     Serial.println(F(">BALL_SERVICE"));
   #endif
@@ -168,12 +169,15 @@ void PongGame::enter_BALL_SERVICE()
   
 void PongGame::process_BALL_SERVICE(void)
 {
-  if(((current_scoring_player==PLAYER_B)&& input_button_A_gotPressed())
-   || ((current_scoring_player==PLAYER_A)&& input_button_B_gotPressed())
-   || output_sceneDurationMillis()>5000)
+  if(((current_scoring_player==PLAYER_B)&& input_button_A_gotReleased())
+   || ((current_scoring_player==PLAYER_A)&& input_button_B_gotReleased())
+   || ((output_sceneDurationMillis()>5000))  )
   {
-      output_begin_GAME_SCENE ();
+      base_A_state=BASE_OPEN;
+      base_B_state=BASE_OPEN;
       game_state=BALL_EXCHANGE; 
+      output_begin_GAME_SCENE ();
+      //TODO Play start EXCHANGE Sound
     }  
 
   manageBaseTriggering();

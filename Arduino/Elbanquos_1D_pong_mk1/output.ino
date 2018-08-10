@@ -320,8 +320,8 @@ void output_process_PLAYER_SCORE_SEQUENCE()
 {
   bool particleAlive=false;
   strip.clear();
-  draw_bases();
-  if(output_frame_number>=4) draw_score();
+  
+  if(output_frame_number>=4) draw_bases();
   
   for(int i=0;i<PARTICLE_COUNT;i++) 
   {
@@ -353,8 +353,7 @@ uint32_t dimmedColor(int r,int g,int b,int i)
 
 void simpleSceneChange()
 {
-  for(int i=0;i<PIXEL_COUNT;i++) strip.setPixelColor(i, 0);
-  strip.show();
+  strip.clear();
   output_frame_number=0;
   output_scene_start_millis=millis();
 }
