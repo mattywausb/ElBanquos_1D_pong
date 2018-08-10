@@ -5,7 +5,13 @@
 
 
 /* Game setting and memory */
-#define GAME_TICK_DELAY 10
+#define TICKS_PER_SECOND 60
+#define MILLIS_PER_TICK 1000/TICKS_PER_SECOND
+#define TICKS_PER_MOVEMENT 2
+#define STANDARD_TRAVERSAL_TIME 1800
+#define STANDARD_TRAVERSAL_TICKS STANDARD_TRAVERSAL_TIME/(MILLIS_PER_TICK)/2
+
+
 #define BASE_HOT_DURATION 500
 #define BASE_HOT_RECOVERY 1000
 
@@ -28,7 +34,7 @@ class PongGame
 {
   public:
     /* Instantiate the game */
-    PongGame(void);
+    PongGame(int gridsize);
 
     /* ----------- Operations ------------------ */
 
@@ -73,11 +79,13 @@ class PongGame
     GAME_STATES game_state=OFF;
     unsigned long game_tick_millis=0;
     unsigned long game_tick_number=0;
+    int game_gridsize=0;   //* Meaning 0= baseA and gridsize-1=Base B)
+    int standard_velocity=0;
     
 
     /* Ball state */
     int ball_position=0;
-    int ball_velocity=1;
+    int ball_velocity=0;
 
     /* Base state */
     unsigned long base_A_trigger_millis=0;

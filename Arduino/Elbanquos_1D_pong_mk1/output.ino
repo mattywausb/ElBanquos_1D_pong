@@ -6,6 +6,7 @@
 #include "particle.h"
 
 #ifdef TRACE_ON
+#define TRACE_OUTPUT_PROGRAM_CHANGE
 //#define TRACE_OUTPUT
 #endif
 
@@ -13,6 +14,14 @@
 
 #define NEO_PIXEL_DATA_PIN    7    // Digital IO pin connected to the NeoPixels.
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO_GRB + NEO_KHZ800);
+
+/* game */
+
+PongGame *displayGame;  // We store this globally as long as there is only one game to present at the same time
+
+#define _get_ball_pixelPosition  (displayGame->getBallPosition()>>7)
+#define BASE_A_POSITION 0
+#define BASE_B_POSITION (PIXEL_COUNT-1)
 
 /* Design */
 
@@ -33,8 +42,9 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 #define BASE_HOT_COLOR strip.Color(230,140,0)
 #define POINT_COLOR strip.Color(15,0,30)
 
-#define BASE_A_POSITION 0
-#define BASE_B_POSITION (PIXEL_COUNT-1)
+
+
+
 
 // general purpose objects for visual design
 #define PARTICLE_COUNT 10
@@ -67,7 +77,7 @@ unsigned long output_scene_start_millis=0;
 unsigned long output_sequene_start_millis=0;
 unsigned long output_frame_number=0;
 
-PongGame *displayGame;  // We store this globally as long as there is only one game to present at the same time
+
 
 /* ********************************************************************************************************** */
 /*               Interface functions                                                                          */
@@ -152,6 +162,9 @@ void output_begin_GAME_SELECT_SCENE()
 {
   simpleSceneChange();
   output_current_scene=GAME_SELECT_SCENE;
+  #ifdef TRACE_OUTPUT_PROGRAM_CHANGE
+     Serial.println(F(">GAME_SELECT_SCENE"));
+  #endif
 }
 
 void output_process_GAME_SELECT_SCENE()
@@ -167,6 +180,9 @@ void output_begin_BALL_SERVICE_SCENE()
 {
   simpleSceneChange();
   output_current_scene=BALL_SERVICE_SCENE;
+  #ifdef TRACE_OUTPUT_PROGRAM_CHANGE
+     Serial.println(F(">BALL_SERVICE_SCENE"));
+  #endif
 }
 
 void output_process_BALL_SERVICE_SCENE()
@@ -174,7 +190,7 @@ void output_process_BALL_SERVICE_SCENE()
   strip.clear();
   draw_bases_and_score();
   
-  strip.setPixelColor(displayGame->getBallPosition(),  BALL_COLOR_DM(__pulse_dimming(12, 10,0)));
+  strip.setPixelColor(_get_ball_pixelPosition,  BALL_COLOR_DM(__pulse_dimming(12, 10,0)));
   strip.show();
 }
  
@@ -185,6 +201,9 @@ void output_begin_GAME_SCENE ()
 {
   simpleSceneChange();
   output_current_scene=GAME_SCENE;
+  #ifdef TRACE_OUTPUT_PROGRAM_CHANGE
+     Serial.println(F(">GAME_SCENE"));
+  #endif
 }
 
 void output_process_GAME_SCENE()
@@ -193,15 +212,15 @@ void output_process_GAME_SCENE()
   static byte previous_ball_position=255;
 
   /* calculate visual effects */
-  if(previous_ball_position!=displayGame->getBallPosition()) {
+  if(previous_ball_position!=_get_ball_pixelPosition) {
        afterglow_position=previous_ball_position;
-       previous_ball_position=displayGame->getBallPosition();      
+       previous_ball_position=_get_ball_pixelPosition;      
   }
   
   for(int i=0;i<PIXEL_COUNT;i++) {
 
       /* Ball Layer */
-      if(i==displayGame->getBallPosition()) {
+      if(i==_get_ball_pixelPosition) {
         strip.setPixelColor(i, BALL_COLOR);
         continue;
       }
@@ -254,6 +273,9 @@ void output_begin_GAME_OVER_SCENE()
 {
   simpleSceneChange();
   output_current_scene=GAME_OVER_SCENE;
+  #ifdef TRACE_OUTPUT_PROGRAM_CHANGE
+     Serial.println(F(">GAME_OVER_SCENE"));
+  #endif
 }
 
 void output_process_GAME_OVER_SCENE()
@@ -294,7 +316,9 @@ void output_begin_PLAYER_SCORE_SEQUENCE(byte scoringPlayer)
       effectParticle[i].ignite(255,0,0,PIXEL_COUNT-1-(i/3),-230-50*i,85);
     }
   }
-  
+  #ifdef TRACE_OUTPUT_PROGRAM_CHANGE
+     Serial.println(F(">PLAYER_SCORE_SEQUENCE"));
+  #endif
 }
 
 void output_process_PLAYER_SCORE_SEQUENCE()
@@ -346,11 +370,14 @@ void beginSequence()
   output_frame_number=0;
 }
 
-void fallbackToScene()
+void fallbackToScene ()
 {
     output_sequence_running=false;
     output_frame_number=0;
     output_current_sequence=NO_SEQUENCE;
+    #ifdef TRACE_OUTPUT_PROGRAM_CHANGE
+     Serial.println(F("<<fallbackToScene"));
+    #endif
 }
 
 /*  ************************  setup  ************************************

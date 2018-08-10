@@ -6,7 +6,7 @@
 #define TRACE_MAIN
 #endif
 
-PongGame theGame ;
+PongGame theGame(PIXEL_COUNT<<7) ;
   
 
  
