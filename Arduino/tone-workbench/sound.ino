@@ -95,33 +95,35 @@
 
 /* Frequencies we will use in this program */
 int note_palette[] = {
-   FREQ_B2, 
-   FREQ_C3,
-   FREQ_D3,
-   FREQ_E3,
-   FREQ_F3,
-   FREQ_G3,
-   FREQ_B3,
-   FREQ_C4
+   FREQ_B3, 
+   FREQ_C4,
+   FREQ_D4,
+   FREQ_E4,
+   FREQ_F4,
+   FREQ_G4,
+   FREQ_A4,
+   FREQ_B4,
+   FREQ_C5
 }; 
 
 /* Tranlastion of note name to index in the note_palette */
 
-#define NOTE_B2 0
-#define NOTE_C3 1
-#define NOTE_D3 2
-#define NOTE_E3 3
-#define NOTE_F3 4
-#define NOTE_G3 5
-#define NOTE_H3 6
-#define NOTE_C4 7
+#define NOTE_B3 0
+#define NOTE_C4 1
+#define NOTE_D4 2
+#define NOTE_E4 3
+#define NOTE_F4 4
+#define NOTE_G4 5
+#define NOTE_A4 6
+#define NOTE_B4 7
+#define NOTE_C5 8
 #define NOTE_PAUSE 255
 
 
 /* Base Timing */
 unsigned int sound_full_note_duration=60000; // Ridiculus high so we notice when we forget to calculate
 
-/* not we can start composing melodys */
+/* now we can start composing melodys */
 
 typedef struct  {
   byte note_index;
@@ -129,9 +131,21 @@ typedef struct  {
 } note_t;
 
 note_t melody_1[] = { 
-  {NOTE_C3,8},{NOTE_C3,8},{NOTE_C3,8},{NOTE_F3,4}
+  {NOTE_A4,8},{NOTE_PAUSE,8},
+  {NOTE_C5,16},{NOTE_B4,16},{NOTE_C5,4},
+  {NOTE_E4,4},{NOTE_G4,8},{NOTE_A4,8}
 };
 
+note_t melody_2[] = { 
+  {NOTE_C5,16},{NOTE_PAUSE,16},{NOTE_C5,16},{NOTE_C5,16},
+  {NOTE_B4,16},{NOTE_PAUSE,16},{NOTE_B4,16},{NOTE_B4,16},
+  {NOTE_A4,16},{NOTE_PAUSE,16},{NOTE_A4,16},{NOTE_A4,16},
+  {NOTE_G4,16},{NOTE_PAUSE,16},{NOTE_G4,16},{NOTE_PAUSE,16},
+  {NOTE_A4,8}
+};
+
+/* variables for effects */
+int sound_pong_base_freq; 
 
 /* All the hardware stuff */
 
@@ -143,7 +157,8 @@ note_t melody_1[] = {
 enum sound_effects {
   sound_off,
   sound_melody,
-  sound_crash
+  sound_crash,
+  sound_pong
 };
 sound_effects sound_current_effect=sound_off;
 
@@ -158,6 +173,7 @@ unsigned long sound_last_tick_time=0;
 
 byte sound_current_frame=0;
 
+
 /*  ************************  interface  ********************************
  *  *********************************************************************
  */
@@ -171,6 +187,7 @@ void sound_stop()
   #endif
 }
 
+/* ------------  Melody1 ------------------- */
 
 void sound_start_Melody1()
 {
@@ -185,23 +202,59 @@ void sound_start_Melody1()
   #endif 
 }
 
+void sound_start_Melody2()
+{
+  sound_current_effect=sound_melody;
+  sound_current_note=0;
+  sound_wait_millis=0;
+  sound_calculate_full_note_duration(120);
+  sound_active_melody=&melody_2[0];
+  sound_active_melody_length=sizeof(melody_2)/sizeof(melody_2[0]);
+}
+
+/* ------------  Pong & Ping  ------------------- */
+
+void sound_start_Pong()
+{
+  sound_current_effect=sound_pong;
+  sound_current_note=0;
+  sound_wait_millis=0;
+  sound_pong_base_freq=random(108,115);
+}
+
+void sound_start_Ping()
+{
+  sound_current_effect=sound_pong;
+  sound_current_note=0;
+  sound_wait_millis=0;
+  sound_pong_base_freq=random(208,230);
+}
+
+void sound_play_pong(){
+  tone(SOUND_OUT_PIN, sound_pong_base_freq+sound_current_note<<2);
+  sound_wait_millis=10;
+  if(++sound_current_note>8) sound_stop();
+}
+
+/* ------------  crash ------------------- */
 
 void sound_start_Crash()
 {
   sound_current_effect=sound_crash;
   sound_current_note=0;
   sound_wait_millis=0;
-  #ifdef TRACE_SOUND
-         Serial.print(F("sound_active_sound_lenth=")); Serial.println(sound_active_melody_length);
-  #endif 
 }
 
 void sound_play_crash(){
-  tone(SOUND_OUT_PIN, random(420-sound_current_note,1000-sound_current_note>>1));
+  tone(SOUND_OUT_PIN, random(550-(sound_current_note<<1),800-(sound_current_note)));
   sound_wait_millis=1;
-  if(++sound_current_note>400) sound_stop();
+  if(++sound_current_note>250) sound_stop();
   
 }
+
+/*  ************************  internals  ********************************
+ *  *********************************************************************
+ */
 
 
 
@@ -261,6 +314,7 @@ void sound_tick()
     switch (sound_current_effect) {
       case sound_melody: sound_play_next_note(); break;
       case sound_crash: sound_play_crash();break;
+      case sound_pong: sound_play_pong();break;
     }
   }
 }

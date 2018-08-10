@@ -22,8 +22,11 @@ void setup() {
 
 enum state {
   melody1,
-  crash
-} current_state=melody1;
+  melody2,
+  crash,
+  pong,
+  ping
+} current_state=pong;
 
 void loop() {
 
@@ -34,22 +37,30 @@ void loop() {
       switch(current_state) 
       {
         case melody1: sound_start_Melody1(); break;
+        case melody2: sound_start_Melody2(); break;
         case crash: sound_start_Crash(); break;
+        case pong: sound_start_Pong(); break;
+        case ping: sound_start_Ping(); break;
+
+        
       }
       Serial.println("TRIGGER_BUTTON");
-      delay(500); // just debounce
+      delay(150); // just debounce
     }
     
     if(!digitalRead(STOP_BUTTON_PIN)) 
     {
        Serial.println("STOP_BUTTON"); 
-       sound_stop();    
+       sound_stop();   
       switch(current_state) 
       {
-        case melody1: current_state=crash; break;
-        case crash: current_state=melody1; break;
+        case melody1: current_state=melody2; break;
+        case melody2: current_state=crash; break;
+        case crash: current_state=pong; break;
+        case pong: current_state=ping; break;
+        case ping: current_state=melody1; break;
       }
-      delay(500); // just debounce
+      delay(150); // just debounce
     }
     sound_tick();    
 
