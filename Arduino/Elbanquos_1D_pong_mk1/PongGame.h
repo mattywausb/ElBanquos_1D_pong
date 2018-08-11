@@ -31,6 +31,11 @@ enum GAME_STATES {
   CLOSING
 };
 
+enum bonus_state_enum {
+  BONUS_NONE,
+  BONUS_BARRIER
+};
+
 enum base_state_enum {
   BASE_BOOST,
   BASE_CLOSED,
@@ -62,6 +67,10 @@ class PongGame
     unsigned int getBallPosition();
     base_state_enum getBase_A_State();
     base_state_enum getBase_B_State();
+    byte getBaseBarrier(byte i) {if(i<2) return base_barrier[i]; else return 0;}
+    bonus_state_enum getBonusState() {return bonus_state;}
+    bool getBonusIsPlaced() {return bonus_position>=0;}
+    int getBonusPosition() {return bonus_position;}
     int  player_A_getScore();
     int  player_B_getScore();
     byte player_getWinner();
@@ -96,7 +105,7 @@ class PongGame
     int ball_position=0;
     int ball_velocity=0;
     int ball_direction=0;
-
+    bool ball_passed_bonus=false;
 
     /* Base state */
     unsigned long base_A_trigger_millis=0;
@@ -104,6 +113,11 @@ class PongGame
     unsigned long base_B_trigger_millis=0;
     base_state_enum base_B_state=BASE_OPEN;
 
+    /* Extra game element state */
+    byte base_barrier[2]={0,0};
+    int bonus_position=-1; /* not placed */
+    bonus_state_enum bonus_state=BONUS_NONE;
+    
     /* Player score */
     byte player_score[2]={0,0};
     byte current_scoring_player=NONE;

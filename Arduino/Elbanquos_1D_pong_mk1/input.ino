@@ -6,8 +6,8 @@
 
 #ifdef TRACE_ON
 #define TRACE_PUSH_WITH_BUILTIN
-#define TRACE_INPUT 
-#define TRACE_INPUT_HIGH 
+//#define TRACE_INPUT 
+//#define TRACE_INPUT_HIGH 
 #endif
 
 /* Port constants --> check the IDS Function */

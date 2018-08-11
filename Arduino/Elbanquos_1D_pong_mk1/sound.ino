@@ -1,5 +1,6 @@
 //#ifdef TRACE_ON
-#define TRACE_SOUND
+//#define TRACE_SOUND
+#define DEBUG_MELODY_SHORT
 //#endif
 
 /*            Musical Note Freqency table  (its just defines, dont worry about the size */
@@ -235,6 +236,14 @@ void sound_start_Ping()
   sound_pong_base_freq=random(208,230);
 }
 
+void sound_start_Barrier()
+{
+  sound_current_effect=sound_pong;
+  sound_current_note=0;
+  sound_wait_millis=0;
+  sound_pong_base_freq=random(110);
+}
+
 void sound_play_pong(){
   tone(SOUND_OUT_PIN, sound_pong_base_freq+sound_current_note<<2);
   sound_wait_millis=10;
@@ -280,6 +289,13 @@ void sound_play_next_note()
       sound_stop();
       return;
     }
+    #ifdef     DEBUG_MELODY_SHORT
+      if(sound_current_note>2)
+      {
+        sound_stop();
+        return;
+      }
+    #endif
   
    int note_duration=0;
   

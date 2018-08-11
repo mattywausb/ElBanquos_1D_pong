@@ -11,6 +11,7 @@ void sound_start_GameStartMelody();
 void sound_start_GameOverMelody();
 void sound_start_Pong();
 void sound_start_Ping();
+void sound_start_Barrier();
 void sound_start_Crash();
 
 

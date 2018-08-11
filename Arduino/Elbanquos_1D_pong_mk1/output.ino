@@ -29,6 +29,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO
 PongGame *displayGame;  // We store this globally as long as there is only one game to present at the same time
 
 #define _get_ball_pixelPosition  (displayGame->getBallPosition()>>7)
+#define _position_to_pixel(i) (i>>7)
 #define BASE_A_POSITION 0
 #define BASE_B_POSITION (PIXEL_COUNT-1)
 
@@ -46,6 +47,7 @@ struct colorRGB_t {
 // in game elements
 colorRGB_t base_a_color={0, 128, 128};
 colorRGB_t base_b_color={150, 0,0};
+colorRGB_t bonus_barrier_color={230,230,240};
 
 #define BALL_COLOR strip.Color(200, 200, 0) 
 #define BALL_COLOR_DM(i)  dimmedColor(200, 200, 0,i) 
@@ -159,6 +161,28 @@ void draw_bases(byte intensity=BASE_STANDARD_INTENSITY)
   else    strip.setPixelColor(BASE_B_POSITION,dimmedColorRGB(base_b_color,intensity));
 }
 
+void draw_bonus()
+{
+  int i;
+  switch(displayGame->getBonusState()) {
+  {
+      case BONUS_BARRIER: 
+            if(displayGame->getBonusIsPlaced())
+            {
+              strip.setPixelColor(_position_to_pixel(displayGame->getBonusPosition()),dimmedColorRGB(bonus_barrier_color,200));
+            } else {
+              for(i=0;i<displayGame->getBaseBarrier(PLAYER_A);i++) {
+               strip.setPixelColor(i,dimmedColorRGB(bonus_barrier_color,100));       
+              }
+              for(i=0;i<displayGame->getBaseBarrier(PLAYER_B);i++) {
+               strip.setPixelColor(PIXEL_COUNT-1-i,dimmedColorRGB(bonus_barrier_color,100));       
+              }
+            }
+            break;
+    }
+  }
+}
+
 #define __pulse_dimming(frequency, phaseshift, baseline) ((FPS-((output_frame_number+phaseshift*FPS*10/frequency)%(FPS*10/frequency)))*(255-baseline)/FPS+baseline)
 /*  ************************  scenes  ***********************************
  *  *********************************************************************
@@ -237,6 +261,7 @@ void output_process_GAME_SCENE()
   }
   
   draw_bases();
+  draw_bonus();
 
   /* Ball */ 
   strip.setPixelColor(_get_ball_pixelPosition, BALL_COLOR);     
