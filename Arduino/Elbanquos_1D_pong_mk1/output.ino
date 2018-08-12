@@ -18,7 +18,7 @@
 
 /*device */
 
-#define NEO_PIXEL_DATA_PIN    7    // Digital IO pin connected to the NeoPixels.
+#define NEO_PIXEL_DATA_PIN    12    // Digital IO pin connected to the NeoPixels.
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, NEO_PIXEL_DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 #define FPS 30

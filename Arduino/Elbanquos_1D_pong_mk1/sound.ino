@@ -1,6 +1,6 @@
 //#ifdef TRACE_ON
 //#define TRACE_SOUND
-#define DEBUG_MELODY_SHORT
+//#define DEBUG_MELODY_SHORT
 //#endif
 
 /*            Musical Note Freqency table  (its just defines, dont worry about the size */
