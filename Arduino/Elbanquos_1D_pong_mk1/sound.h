@@ -9,8 +9,9 @@ void sound_stop();
 
 void sound_start_GameStartMelody();
 void sound_start_GameOverMelody();
-void sound_start_Pong();
-void sound_start_Ping();
+void sound_start_Pong(int ball_velocity);
+void sound_start_BoostPong(int ball_velocity);
+void sound_start_PongService();
 void sound_start_Barrier();
 void sound_start_Crash();
 

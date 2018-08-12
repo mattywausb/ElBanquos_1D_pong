@@ -170,6 +170,7 @@ void draw_bonus()
             if(displayGame->getBonusIsPlaced())
             {
               strip.setPixelColor(_position_to_pixel(displayGame->getBonusPosition()),dimmedColorRGB(bonus_barrier_color,200));
+              strip.setPixelColor(_position_to_pixel(displayGame->getBonusPosition())-1,dimmedColorRGB(bonus_barrier_color,200));
             } else {
               for(i=0;i<displayGame->getBaseBarrier(PLAYER_A);i++) {
                strip.setPixelColor(i,dimmedColorRGB(bonus_barrier_color,100));       

@@ -205,7 +205,7 @@ void PongGame::process_BALL_SERVICE(void)
     base_B_state = BASE_OPEN;
     game_state = BALL_EXCHANGE;
     output_begin_GAME_SCENE ();
-    sound_start_Ping();
+    sound_start_PongService();
   }
 
   manageBaseTriggering();
@@ -263,11 +263,11 @@ void PongGame::process_BALL_EXCHANGE(void)
         ball_direction = 1;
         ball_passed_bonus = false;
         if (base_A_state == BASE_BOOST) {
-          sound_start_Ping();
+          sound_start_BoostPong(ball_velocity);
           ball_velocity = level_velocity << 1; //Double speed
           level_velocity += 2;
         } else {
-          sound_start_Pong();
+          sound_start_Pong(ball_velocity);
           ball_velocity = level_velocity;
         }
         ball_position = ball_velocity;  // Reflect the ball
@@ -288,11 +288,11 @@ void PongGame::process_BALL_EXCHANGE(void)
         ball_direction = -1;
         ball_passed_bonus = false;
         if (base_B_state == BASE_BOOST) {
-          sound_start_Ping();
+          sound_start_BoostPong(ball_velocity);
           ball_velocity = level_velocity << 1; //Double speed
           level_velocity += 2;
         } else {
-          sound_start_Pong();
+          sound_start_Pong(ball_velocity);
           ball_velocity = level_velocity;
         }
         ball_position = game_gridsize - 1 - ball_velocity; // Reflect the ball
@@ -341,7 +341,7 @@ void PongGame::process_BALL_EXCHANGE(void)
       }
     }
 
-    if (base_reflection_event && bonus_state == BONUS_NONE && bonus_position == -1  ) {
+    if (base_reflection_event && bonus_state == BONUS_NONE && bonus_position == -1  && random(100)<=20) {
       bonus_position = game_gridsize >> 1; // mid position
       bonus_state = BONUS_BARRIER;
 #ifdef TRACE_PONG_EVENT

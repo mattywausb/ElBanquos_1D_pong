@@ -220,20 +220,28 @@ void sound_start_GameOverMelody()
 
 /* ------------  Pong & Ping  ------------------- */
 
-void sound_start_Pong()
+void sound_start_Pong(int ball_velocity)
 {
   sound_current_effect=sound_pong;
   sound_current_note=0;
   sound_wait_millis=0;
-  sound_pong_base_freq=random(108,115);
+  sound_pong_base_freq=90+abs(ball_velocity);
 }
 
-void sound_start_Ping()
+void sound_start_BoostPong(int ball_velocity)
 {
   sound_current_effect=sound_pong;
   sound_current_note=0;
   sound_wait_millis=0;
-  sound_pong_base_freq=random(208,230);
+  sound_pong_base_freq=104+abs(ball_velocity);
+}
+
+void sound_start_PongService()
+{
+  sound_current_effect=sound_pong;
+  sound_current_note=0;
+  sound_wait_millis=0;
+  sound_pong_base_freq=90;
 }
 
 void sound_start_Barrier()
@@ -241,7 +249,7 @@ void sound_start_Barrier()
   sound_current_effect=sound_pong;
   sound_current_note=0;
   sound_wait_millis=0;
-  sound_pong_base_freq=random(110);
+  sound_pong_base_freq=40;
 }
 
 void sound_play_pong(){
