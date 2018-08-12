@@ -14,7 +14,7 @@
 * pen or pencil (for decorating)
 
 # Final Result
-![Final MK1] (mk1_final_build.jpg)
+![Final_MK1](./mk1_final_build.jpg)
 
 # Wiring
 See fritzing file in the reporisotry for better detail.
