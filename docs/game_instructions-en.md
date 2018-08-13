@@ -24,11 +24,14 @@ The ball is placed at one players base at random. By pushing and releasing the b
 * By releasing the button, the player kicks off the ball
 
 ## Extras
+
 ### Increasing velocity
 * The ball will increase its velocity over time. Scoring a point will reset the velocity to the starting value.
+
 ### Ball Boost
 * Pushing the button right in time, when the ball arrives, will give the ball a speed boost for that kick
 * every boosted hit will increase the overall velocity more rapidly
+
 ### Barrier
 * From time to time, a "barrier pill" will appear in the middle of the track.
 * after hitting the ball, a player can grab the pill by **pressing and holding** the button, when the ball runs over the pill
