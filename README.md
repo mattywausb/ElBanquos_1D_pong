@@ -22,4 +22,4 @@ In my other arduino projects I already startet to split up the code into **core 
 * MK2 - Extending the game to a longer pixel strip (depending on the money it will cost). This will give more options for some crazy variations (Moving bonus spots, labyriths, magnets, stacking of bonus elements, movement variations)
 
 # Log
-* MK1 is complete. See [![MK1 Video](docs/m1_demo_video_splash.jpg)](https://youtu.be/OK5DsR__NZ8)
+* MK1 is complete. See</br>[![MK1 Video](docs/m1_demo_video_splash.jpg)](https://youtu.be/OK5DsR__NZ8)
