@@ -18,8 +18,13 @@ In my other arduino projects I already startet to split up the code into **core 
     * get a robust foundation for extending functionality
 
 # Roadmap / Ideas
-* MK1 - Initial implementation using a 12 pixel ring. The main effort will be to implement a module architecture that can be extended an modified easy with new features. The main challenge is to implement smooth movement with 16 bit integer arithmetic
-* MK2 - Extending the game to a longer pixel strip (depending on the money it will cost). This will give more options for some crazy variations (Moving bonus spots, labyriths, magnets, stacking of bonus elements, movement variations)
+## MK 1 - The tiny prototype
+Initial implementation using a 12 pixel ring. The main effort will be to implement a module architecture that can be extended an modified easy with new features. The main challenge is to implement smooth movement with 16 bit integer arithmetic.
+* [Description of the hardware](https://mattywausb.github.io/ElBanquos_1D_pong/docs/Hardware_MK1.html)
+* [Game instruction](https://mattywausb.github.io/ElBanquos_1D_pong/docs/docs/game_instructions-en.html)
+
+## MK2 - scaling up
+Extending the game to a longer pixel strip (depending on the money it will cost). This will give more options for some crazy variations (Moving bonus spots, labyriths, magnets, stacking of bonus elements, movement variations)
 
 # Log
 * MK1 is complete. See</br>[![MK1 Video](docs/m1_demo_video_splash.jpg)](https://youtu.be/OK5DsR__NZ8)
